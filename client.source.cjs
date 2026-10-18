@@ -604,6 +604,32 @@ const PENDING_QUERY_FIELD_IDS = ['materialName', 'materialCode', 'materialCatego
 const MINE_QUERY_FIELD_IDS = ['materialName', 'materialCode', 'materialCategory', 'specification', 'requisitionNo', 'lineNo', 'quantity', 'remainingQuantity', 'purchaseOrderNo', 'supplier', 'orderStatus', 'demandDate', 'expectedShipAt', 'notes', 'confirmedAt']
 const ORDER_STATUS_OPTIONS = ['NC已保存', 'NC待提交', '待审批', '已审批', '已通知供应商']
 
+class IntakeErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { error: null }
+  }
+
+  static getDerivedStateFromError(error) {
+    return { error }
+  }
+
+  componentDidCatch(error, info) {
+    console.error('[procurement] render error:', error, info.componentStack)
+  }
+
+  render() {
+    if (!this.state.error) return this.props.children
+    const message = this.state.error instanceof Error ? this.state.error.message : String(this.state.error)
+    return h('main', { className: 'pc-intake' },
+      h('section', { className: 'pi-card pi-error-screen', role: 'alert' },
+        h('h1', { className: 'pi-title' }, '采购工作台暂时无法显示'),
+        h('p', { className: 'pi-help' }, '插件捕获到界面异常，详细信息已写入浏览器 Console。可以尝试重新载入此区域。'),
+        h('pre', { className: 'pi-error-detail' }, message),
+        h('button', { type: 'button', className: 'pi-button', onClick: () => this.setState({ error: null }) }, '重新载入')))
+  }
+}
+
 function IntakeBody({ t, data, sessionId }) {
   const [store, setStore] = React.useState({ pendingRows: [], mineRows: [], pendingContextRows: [], pendingTotal: 0, mineTotal: 0, pendingFilteredTotal: 0, mineFilteredTotal: 0, pendingRequisitionCount: 0, pendingFilteredRequisitionCount: 0, latestImport: null })
   const [menu, setMenu] = React.useState('requests')
@@ -735,19 +761,19 @@ function IntakeBody({ t, data, sessionId }) {
   function changePage(status, page) {
     if (status === 'pending') {
       setPendingPage(page)
-      void loadPage(status, page, pendingPageSize)
+      void loadPage(status, page, pendingPageSize).catch(() => {})
     } else {
       setMinePage(page)
-      void loadPage(status, page, minePageSize)
+      void loadPage(status, page, minePageSize).catch(() => {})
     }
   }
   function changePageSize(status, pageSize) {
     if (status === 'pending') {
       setPendingPageSize(pageSize); setPendingPage(1)
-      void loadPage(status, 1, pageSize)
+      void loadPage(status, 1, pageSize).catch(() => {})
     } else {
       setMinePageSize(pageSize); setMinePage(1)
-      void loadPage(status, 1, pageSize)
+      void loadPage(status, 1, pageSize).catch(() => {})
     }
   }
   function refreshTable(status) {
@@ -1187,6 +1213,6 @@ module.exports = {
     ctx.effect(() => disposeRemote, 'procurement-intake: remote')
     ctx.effect(() => ctx.sidebarRightTabs.register({ id: '@hilda-biz/dsh-procurement-intake', kind: 'procurement-intake', priority: 'extension', title: () => t('title'), guide: [{ id: 'intake', order: 30, title: () => t('title'), description: () => t('subtitle') }] }), 'procurement-intake: tab type')
     const data = dataAccess(ctx)
-    ctx.effect(() => ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({ name: 'sidebar.right.pane.tab', key: '@hilda-biz/dsh-procurement-intake', locale: namespace }, (props) => h(IntakeBody, { ...props, data }))), 'procurement-intake: tab body')
+    ctx.effect(() => ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({ name: 'sidebar.right.pane.tab', key: '@hilda-biz/dsh-procurement-intake', locale: namespace }, (props) => h(IntakeErrorBoundary, null, h(IntakeBody, { ...props, data })))), 'procurement-intake: tab body')
   },
 }
