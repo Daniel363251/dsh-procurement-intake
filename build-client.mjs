@@ -7,6 +7,7 @@ const root = dirname(fileURLToPath(import.meta.url))
 const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'))
 const aiTableStyles = await readFile(join(root, 'vendor/ai-table/ai-table.css'), 'utf8')
 const sharedControlsStyles = await readFile(join(root, 'vendor/hilda-ui/controls.css'), 'utf8')
+const emptyStateImage = `data:image/png;base64,${(await readFile(join(root, 'assets/empty-state-mascots.png'))).toString('base64')}`
 const result = await build({
   entryPoints: [join(root, 'client.source.cjs')],
   bundle: true,
@@ -16,7 +17,7 @@ const result = await build({
   target: 'es2020',
   external: ['react', 'react-dom'],
   alias: { '@enterprise/ai-table': join(root, 'vendor/ai-table/ai-table.js') },
-  define: { __AI_TABLE_CSS__: JSON.stringify(aiTableStyles), __HILDA_UI_CSS__: JSON.stringify(sharedControlsStyles) },
+  define: { __AI_TABLE_CSS__: JSON.stringify(aiTableStyles), __HILDA_UI_CSS__: JSON.stringify(sharedControlsStyles), __EMPTY_STATE_IMAGE__: JSON.stringify(emptyStateImage) },
   minify: true,
   legalComments: 'eof',
 })

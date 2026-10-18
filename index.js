@@ -85,6 +85,7 @@ const purchaseOrderSchema = z.object({
   items: z.array(purchaseOrderItemSchema).default([]), deliveryAddress: z.string().default(''), recipient: z.string().default(''),
   recipientPhone: z.string().default(''), deliveryTime: z.string().default(''), paymentTerms: z.array(z.string()).default([]),
   otherTerms: z.array(z.string()).default([]), clauses: z.array(purchaseOrderClauseSchema).default([]),
+  activityLog: z.array(activitySchema).default([]),
   sourceFileName: z.string().default(''), importedAt: z.string(),
 })
 
@@ -104,7 +105,17 @@ const modelSettingsSchema = z.object({
 const procurementMetaSchema = z.object({
   latestImport: latestImportMetaSchema,
   modelSettings: modelSettingsSchema.optional(),
+  workspaceReadTodoIds: z.array(z.string()).default([]),
 })
+
+const masterStatusSchema = z.enum(['enabled', 'disabled']).default('enabled')
+const masterTimestamps = { createdAt: z.string(), updatedAt: z.string() }
+const supplierMasterSchema = z.object({ id: z.string(), name: z.string(), status: masterStatusSchema, ...masterTimestamps })
+const materialMasterSchema = z.object({
+  id: z.string(), code: z.string().default(''), name: z.string(), category: z.string().default(''),
+  specification: z.string().default(''), unit: z.string().default(''), status: masterStatusSchema, ...masterTimestamps,
+})
+const materialCategoryMasterSchema = z.object({ id: z.string(), name: z.string(), status: masterStatusSchema, ...masterTimestamps })
 
 const procurementDomain = defineDomain({
   name: 'procurement',
@@ -113,10 +124,13 @@ const procurementDomain = defineDomain({
   tables: {
     requisitions: domainTable(requisitionLineSchema),
     purchase_orders: domainTable(purchaseOrderSchema),
+    suppliers: domainTable(supplierMasterSchema),
+    materials: domainTable(materialMasterSchema),
+    material_categories: domainTable(materialCategoryMasterSchema),
   },
   global: {
     schema: procurementMetaSchema,
-    initial: { latestImport: null },
+    initial: { latestImport: null, workspaceReadTodoIds: [] },
   },
 })
 
@@ -470,6 +484,127 @@ function filterListKeywords(rows, keywords = '') {
 function createProcurementService(domain) {
   const requisitions = () => domain.table('requisitions')
   const purchaseOrders = () => domain.table('purchase_orders')
+  const masterTables = { suppliers: 'suppliers', materials: 'materials', materialCategories: 'material_categories' }
+  const masterSchemas = { suppliers: supplierMasterSchema, materials: materialMasterSchema, materialCategories: materialCategoryMasterSchema }
+  const masterTable = (type) => {
+    const table = masterTables[type]
+    if (!table) throw new Error(`基础资料类型无效：${type}`)
+    return domain.table(table)
+  }
+  const masterKey = (type, value) => {
+    if (type === 'suppliers' || type === 'materialCategories') return normalizeHeader(value.name)
+    const code = normalizeHeader(value.code)
+    return code ? `code:${code}` : `name:${normalizeHeader(value.name)}|${normalizeHeader(value.specification)}`
+  }
+  const masterId = (type, key) => `${type}:${Buffer.from(key).toString('base64url')}`
+
+  async function upsertImportedMaster(type, incoming) {
+    const value = { ...incoming, name: String(incoming.name ?? '').trim() }
+    if (!value.name) return false
+    if (type === 'materials') {
+      value.code = String(value.code ?? '').trim()
+      value.category = String(value.category ?? '').trim()
+      value.specification = String(value.specification ?? '').trim()
+      value.unit = String(value.unit ?? '').trim()
+    }
+    const key = masterKey(type, value)
+    if (!key || key === 'name:|') return false
+    const table = masterTable(type)
+    const id = masterId(type, key)
+    const current = table.get(id)
+    const now = nowIso()
+    const merged = current
+      ? { ...current, ...Object.fromEntries(Object.entries(value).filter(([field, fieldValue]) => field !== 'name' && fieldValue && !current[field])), updatedAt: now }
+      : { ...value, id, status: 'enabled', createdAt: now, updatedAt: now }
+    if (current && !current.name) merged.name = value.name
+    await table.put(id, masterSchemas[type].parse(merged))
+    return !current
+  }
+
+  async function collectImportedMasterData({ lines = [], orders = [] } = {}) {
+    let createdCount = 0
+    for (const line of lines) {
+      createdCount += Number(await upsertImportedMaster('suppliers', { name: line.supplier }))
+      createdCount += Number(await upsertImportedMaster('materials', {
+        code: line.materialCode, name: line.materialName, category: line.materialCategory || line.sourceFields?.['物料分类'] || line.sourceFields?.['物料类别'],
+        specification: [line.specification, line.model].filter(Boolean).join(' · '), unit: line.unit,
+      }))
+      createdCount += Number(await upsertImportedMaster('materialCategories', { name: line.materialCategory || line.sourceFields?.['物料分类'] || line.sourceFields?.['物料类别'] }))
+    }
+    for (const order of orders) {
+      createdCount += Number(await upsertImportedMaster('suppliers', { name: order.supplier }))
+      for (const item of order.items || []) {
+        createdCount += Number(await upsertImportedMaster('materials', {
+          code: item.materialCode, name: item.name, category: item.materialCategory,
+          specification: item.specification, unit: item.unit,
+        }))
+        createdCount += Number(await upsertImportedMaster('materialCategories', { name: item.materialCategory }))
+      }
+    }
+    return { createdCount }
+  }
+
+  function listMasterData(type) {
+    return [...masterTable(type).entries()].map(([, row]) => row)
+      .sort((left, right) => left.name.localeCompare(right.name, 'zh-CN'))
+  }
+
+  async function saveMasterData(type, value) {
+    const schema = masterSchemas[type]
+    const table = masterTable(type)
+    const name = String(value.name ?? '').trim()
+    if (!name) throw new Error('名称不能为空')
+    const current = value.id ? table.get(value.id) : null
+    const now = nowIso()
+    const normalized = {
+      ...current,
+      ...value,
+      id: current?.id || masterId(type, masterKey(type, { ...value, name })),
+      name,
+      status: current?.status || 'enabled',
+      createdAt: current?.createdAt || now,
+      updatedAt: now,
+    }
+    if (type === 'materials') {
+      for (const field of ['code', 'category', 'specification', 'unit']) normalized[field] = String(normalized[field] ?? '').trim()
+    }
+    const key = masterKey(type, normalized)
+    const duplicate = [...table.entries()].some(([id, row]) => id !== normalized.id && masterKey(type, row) === key)
+    if (duplicate) throw new Error(type === 'materials' ? '相同物料编码或名称规格已存在' : '该名称已存在')
+    await table.put(normalized.id, schema.parse(normalized))
+    return schema.parse(normalized)
+  }
+
+  async function setMasterDataStatus(type, ids, status) {
+    if (!['enabled', 'disabled'].includes(status)) throw new Error('启用状态无效')
+    const table = masterTable(type)
+    let updatedCount = 0
+    for (const id of new Set(ids || [])) {
+      const row = table.get(id)
+      if (!row || row.status === status) continue
+      await table.update(id, current => masterSchemas[type].parse({ ...current, status, updatedAt: nowIso() }))
+      updatedCount += 1
+    }
+    return { updatedCount }
+  }
+
+  async function deleteMasterData(type, ids) {
+    const table = masterTable(type)
+    let deletedCount = 0
+    for (const id of new Set(ids || [])) {
+      if (!table.get(id)) continue
+      await table.delete(id)
+      deletedCount += 1
+    }
+    return { deletedCount }
+  }
+
+  async function seedMasterDataFromStoredImports() {
+    return collectImportedMasterData({
+      lines: all(),
+      orders: [...purchaseOrders().entries()].map(([, order]) => order),
+    })
+  }
 
   function all() {
     return [...requisitions().entries()].map(([, row]) => row)
@@ -521,10 +656,157 @@ function createProcurementService(domain) {
     const safePage = Math.min(pageCount, Math.max(1, Math.floor(Number(page) || 1)))
     const rows = allOrders.slice((safePage - 1) * safePageSize, safePage * safePageSize).map((order) => ({
       ...order,
+      activityLog: order.activityLog || [],
       requisitionNos: purchaseOrderRequisitionNos(order),
       purchaseOrderStatus: order.purchaseOrderStatus || '待通知供应商',
     }))
     return { count: allOrders.length, page: safePage, pageSize: safePageSize, rows }
+  }
+
+  function workspaceSummary(days = 30) {
+    const safeDays = Math.min(90, Math.max(7, Math.floor(Number(days) || 30)))
+    const requisitionRows = all()
+    const ownedRows = requisitionRows.filter((row) => row.isMine)
+    const pendingRows = requisitionRows.filter((row) => !row.isMine)
+    const orders = [...purchaseOrders().entries()].map(([, order]) => ({
+      ...order,
+      requisitionNos: purchaseOrderRequisitionNos(order),
+      purchaseOrderStatus: order.purchaseOrderStatus || '待通知供应商',
+    }))
+    const dateKey = (value) => {
+      if (!value) return ''
+      const date = new Date(value)
+      return Number.isNaN(date.getTime()) ? '' : date.toISOString().slice(0, 10)
+    }
+    const today = new Date()
+    const trend = Array.from({ length: safeDays }, (_, index) => {
+      const date = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - (safeDays - index - 1)))
+      return { date: date.toISOString().slice(0, 10), requisitions: 0, orders: 0 }
+    })
+    const trendByDate = new Map(trend.map((item) => [item.date, item]))
+    for (const row of requisitionRows) {
+      const bucket = trendByDate.get(dateKey(row.importedAt))
+      if (bucket) bucket.requisitions += 1
+    }
+    for (const order of orders) {
+      const bucket = trendByDate.get(dateKey(order.importedAt))
+      if (bucket) bucket.orders += 1
+    }
+
+    const overdueItems = []
+    const todayKey = dateKey(today)
+    for (const order of orders) {
+      for (const item of order.items || []) {
+        const expectedDate = dateKey(item.expectedArrivalDate)
+        const remaining = Number(item.remainingQuantity ?? ((item.orderedQuantity ?? 0) - (item.receivedQuantity ?? 0)))
+        if (expectedDate && expectedDate < todayKey && remaining > 0) overdueItems.push({ order, item, expectedDate, remaining })
+      }
+    }
+
+    const todoCandidates = [
+      ...orders.filter((order) => order.purchaseOrderStatus === '待通知供应商').map((order) => ({
+        id: `order:${order.id}:notify`, type: 'order', entityId: order.id, title: '通知供应商',
+        description: `${order.orderNo}${order.supplier ? ` · ${order.supplier}` : ''}`,
+        recordNo: order.orderNo, entity: order, priority: 1,
+      })),
+      ...ownedRows.filter((row) => String(row.nextAction || '').trim()).map((row) => ({
+        id: `request:${row.id}:next`, type: 'request', entityId: row.id, title: row.nextAction,
+        description: `${row.requisitionNo || '未填写请购单号'} · ${row.materialName || '采购明细'}`,
+        dueDate: row.expectedShipAt || '', recordNo: row.requisitionNo, entity: row, priority: 2,
+      })),
+      ...overdueItems.map(({ order, item, expectedDate, remaining }) => ({
+        id: `order:${order.id}:overdue:${item.sequence || item.name}`, type: 'order', entityId: order.id, title: '预计到货已逾期',
+        description: `${order.orderNo} · ${item.name || '采购明细'} · 未到 ${remaining}`,
+        dueDate: expectedDate, recordNo: order.orderNo, entity: order, priority: 0,
+      })),
+    ].sort((left, right) => left.priority - right.priority || String(left.createdAt || left.dueDate || '').localeCompare(String(right.createdAt || right.dueDate || '')))
+    const readIds = new Set(domain.global.get().workspaceReadTodoIds || [])
+    const todos = todoCandidates
+      .map((item) => ({ ...item, isRead: readIds.has(item.id) }))
+      .sort((left, right) => Number(left.isRead) - Number(right.isRead) || left.priority - right.priority || String(left.createdAt || left.dueDate || '').localeCompare(String(right.createdAt || right.dueDate || '')))
+
+    const recentActivity = [
+      ...ownedRows.flatMap((row) => (row.activityLog || []).map((entry) => ({
+        id: `request:${row.id}:${entry.id}`, type: 'request', entityId: row.id, title: entry.action,
+        detail: entry.detail || '', createdAt: entry.createdAt || '', recordNo: row.requisitionNo, entity: row,
+      }))),
+      ...orders.flatMap((order) => (order.activityLog || []).map((entry) => ({
+        id: `order:${order.id}:${entry.id}`, type: 'order', entityId: order.id, title: entry.action,
+        detail: entry.detail || '', createdAt: entry.createdAt || '', recordNo: order.orderNo, entity: order,
+      }))),
+    ].sort((left, right) => String(right.createdAt).localeCompare(String(left.createdAt))).slice(0, 8)
+
+    return {
+      generatedAt: nowIso(),
+      counts: {
+        pendingLines: pendingRows.length,
+        ownedLines: ownedRows.length,
+        purchaseOrders: orders.length,
+        waitingVendorNotice: orders.filter((order) => order.purchaseOrderStatus === '待通知供应商').length,
+        unmatchedPurchaseOrders: ownedRows.filter((row) => !String(row.purchaseOrderNo || '').trim()).length,
+        overdueDeliveries: overdueItems.length,
+      },
+      trend,
+      todos,
+      recentActivity,
+    }
+  }
+
+  async function setWorkspaceTodosRead(ids, isRead) {
+    const uniqueIds = [...new Set((ids || []).filter((id) => typeof id === 'string' && id))]
+    const current = domain.global.get()
+    const readIds = new Set(current.workspaceReadTodoIds || [])
+    for (const id of uniqueIds) {
+      if (isRead) readIds.add(id)
+      else readIds.delete(id)
+    }
+    await domain.global.set({ ...current, workspaceReadTodoIds: [...readIds] })
+    return { updatedCount: uniqueIds.length }
+  }
+
+  async function updatePurchaseOrder(id, updates) {
+    const current = purchaseOrders().get(id)
+    if (!current) throw new Error(`未找到采购订单：${id}`)
+    const editableFields = [
+      ['orderNo', '订单编号'], ['purchaseOrderStatus', '采购订单状态'], ['orderDate', '订单日期'],
+      ['procurementOrg', '采购组织'], ['inventoryOrg', '库存组织'], ['supplier', '供应商'],
+      ['requisitionType', '请购类型'], ['preparer', '制单人'], ['procurementOfficer', '采购员'],
+      ['procurementDepartment', '采购部门'], ['project', '项目'], ['taxInclusiveTotal', '含税总额'],
+      ['taxExclusiveTotal', '未税总额'], ['taxRate', '税率'], ['deliveryAddress', '交付地点'],
+      ['recipient', '收货人'], ['recipientPhone', '联系电话'], ['deliveryTime', '交付时间'],
+    ]
+    const numericFields = new Set(['taxInclusiveTotal', 'taxExclusiveTotal'])
+    const next = { ...current }
+    const changes = []
+    for (const [field, label] of editableFields) {
+      if (updates[field] === undefined) continue
+      const value = numericFields.has(field)
+        ? (updates[field] === null || updates[field] === '' ? null : Number(updates[field]))
+        : String(updates[field] ?? '').trim()
+      if (numericFields.has(field) && value !== null && !Number.isFinite(value)) throw new Error(`${label}必须是有效数字`)
+      if (field === 'purchaseOrderStatus' && !['待通知供应商', '已通知供应商', '取消了采购订单'].includes(value)) {
+        throw new Error('采购订单状态无效')
+      }
+      const previousValue = current[field] ?? ''
+      if (String(previousValue) === String(value ?? '')) continue
+      changes.push(`${label}：${previousValue === '' ? '未填写' : previousValue} → ${value === null || value === '' ? '未填写' : value}`)
+      next[field] = value
+      if (field === 'procurementOrg') next.buyer = value
+    }
+    if (!changes.length) return { ...current, activityLog: current.activityLog || [], requisitionNos: purchaseOrderRequisitionNos(current) }
+
+    if (next.orderNo !== current.orderNo) {
+      const normalizedOrderNo = String(next.orderNo).replace(/[\s\u00a0]/g, '').toLowerCase()
+      if (!normalizedOrderNo) throw new Error('订单编号不能为空')
+      const duplicate = [...purchaseOrders().entries()].some(([otherId, order]) => otherId !== id
+        && String(order.orderNo ?? '').replace(/[\s\u00a0]/g, '').toLowerCase() === normalizedOrderNo)
+      if (duplicate) throw new Error('该订单编号已存在')
+    }
+
+    next.activityLog = [...(current.activityLog || []), activity('编辑采购订单信息', changes.join('；'))]
+    const saved = await purchaseOrders().update(id, () => purchaseOrderSchema.parse(next))
+    if (current.purchaseOrderStatus !== saved.purchaseOrderStatus) await syncOwnedPurchaseOrderStatuses()
+    return { ...saved, requisitionNos: purchaseOrderRequisitionNos(saved) }
   }
 
   async function deletePurchaseOrders(ids) {
@@ -604,7 +886,11 @@ function createProcurementService(domain) {
     for (const id of new Set(ids ?? [])) {
       const current = purchaseOrders().get(id)
       if (!current || current.purchaseOrderStatus === '取消了采购订单') continue
-      await purchaseOrders().update(id, (order) => ({ ...order, purchaseOrderStatus: '取消了采购订单' }))
+      await purchaseOrders().update(id, (order) => ({
+        ...order,
+        purchaseOrderStatus: '取消了采购订单',
+        activityLog: [...(order.activityLog || []), activity('取消采购订单', `采购订单状态：${order.purchaseOrderStatus || '待通知供应商'} → 取消了采购订单`)],
+      }))
       cancelledCount += 1
     }
     const sync = await syncOwnedPurchaseOrderStatuses()
@@ -616,7 +902,11 @@ function createProcurementService(domain) {
     for (const id of new Set(ids ?? [])) {
       const current = purchaseOrders().get(id)
       if (!current || current.purchaseOrderStatus === '取消了采购订单' || current.purchaseOrderStatus === '已通知供应商') continue
-      await purchaseOrders().update(id, (order) => ({ ...order, purchaseOrderStatus: '已通知供应商' }))
+      await purchaseOrders().update(id, (order) => ({
+        ...order,
+        purchaseOrderStatus: '已通知供应商',
+        activityLog: [...(order.activityLog || []), activity('通知供应商', `采购订单状态：${order.purchaseOrderStatus || '待通知供应商'} → 已通知供应商`)],
+      }))
       notifiedCount += 1
     }
     const sync = await syncOwnedPurchaseOrderStatuses()
@@ -697,6 +987,7 @@ function createProcurementService(domain) {
       }))
     }
     for (const order of incoming) await table.put(order.id, order)
+    await collectImportedMasterData({ orders: incoming })
     const sync = await syncOwnedPurchaseOrderStatuses()
     return { importedCount: incoming.length, skippedCount, ...sync }
   }
@@ -811,7 +1102,8 @@ function createProcurementService(domain) {
       }
     })
     for (const row of incoming) await requisitions().put(row.id, requisitionLineSchema.parse(row))
-    await domain.global.set({
+    await collectImportedMasterData({ lines: incoming })
+    await domain.global.set({ ...domain.global.get(),
       latestImport: { fileName, sheetName, importedAt, importedCount: incoming.length - updatedCount, updatedCount },
     })
     const sync = await syncOwnedPurchaseOrderStatuses()
@@ -865,6 +1157,9 @@ function createProcurementService(domain) {
     list,
     listPage,
     listPurchaseOrders,
+    workspaceSummary,
+    setWorkspaceTodosRead,
+    updatePurchaseOrder,
     importPurchaseOrders,
     deletePurchaseOrders,
     syncOwnedPurchaseOrderStatuses,
@@ -882,6 +1177,11 @@ function createProcurementService(domain) {
     latestImport: () => domain.global.get().latestImport,
     getModelSettings,
     updateModelSettings,
+    listMasterData,
+    saveMasterData,
+    setMasterDataStatus,
+    deleteMasterData,
+    seedMasterDataFromStoredImports,
     migrateProcurementOrg,
   }
 }
@@ -1045,6 +1345,12 @@ class ProcurementService extends TypertRemoteService {
     const domain = await this.ready
     if (this.service === null) {
       this.service = createProcurementService(domain)
+      try {
+        const seeded = await this.service.seedMasterDataFromStoredImports()
+        if (seeded.createdCount) this.ctx.logger.info(`[procurement] initialized ${seeded.createdCount} procurement master-data records`)
+      } catch (error) {
+        this.ctx.logger.warn(`[procurement] master-data initialization skipped: ${error instanceof Error ? error.message : String(error)}`)
+      }
       try {
         const migrated = await this.service.migrateMaterialCategory()
         if (migrated) this.ctx.logger.info(`[procurement] backfilled materialCategory for ${migrated} rows`)
@@ -1236,6 +1542,21 @@ class ProcurementService extends TypertRemoteService {
     return service.listPurchaseOrders(request.page, request.pageSize, request)
   }
 
+  async workspaceSummary(request) {
+    const service = await this.getService()
+    return service.workspaceSummary(request.days)
+  }
+
+  async setWorkspaceTodosRead(request) {
+    const service = await this.getService()
+    return service.setWorkspaceTodosRead(request.ids, request.isRead)
+  }
+
+  async updatePurchaseOrder(request) {
+    const service = await this.getService()
+    return service.updatePurchaseOrder(request.id, request)
+  }
+
   async deletePurchaseOrders(request) {
     const service = await this.getService()
     return service.deletePurchaseOrders(request.ids)
@@ -1332,6 +1653,27 @@ class ProcurementService extends TypertRemoteService {
   async updateModelSettings(request) {
     const service = await this.getService()
     return await service.updateModelSettings(request.model, request.reasoningEffort)
+  }
+
+  async listMasterData(request) {
+    const service = await this.getService()
+    return { rows: service.listMasterData(request.type) }
+  }
+
+  async saveMasterData(request) {
+    const service = await this.getService()
+    const { type, ...value } = request
+    return service.saveMasterData(type, value)
+  }
+
+  async setMasterDataStatus(request) {
+    const service = await this.getService()
+    return service.setMasterDataStatus(request.type, request.ids, request.status)
+  }
+
+  async deleteMasterData(request) {
+    const service = await this.getService()
+    return service.deleteMasterData(request.type, request.ids)
   }
 
   // --- AI 生成（LLM）---
