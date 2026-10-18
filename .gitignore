@@ -1,0 +1,9 @@
+# 依赖（由 npm install 重新生成）
+node_modules/
+
+# 日志与系统文件
+*.log
+.DS_Store
+
+# 注意：client.js 与 vendor/ai-table/ 是构建产物，但为了「导入即用」需随仓库一起提交，
+# 因此这里不忽略它们。

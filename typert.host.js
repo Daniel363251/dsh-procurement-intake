@@ -1,0 +1,15 @@
+import { $remote } from './remote-def.js'
+
+export const TYPERT = {
+  package: '@hilda-biz/dsh-procurement-intake',
+  face: 'host',
+  schemas: [],
+  get invocations() {
+    return $remote.descriptors
+  },
+  model: {
+    services: [{ key: 'procurement', exportName: 'ProcurementService', members: [], types: [] }],
+    events: [],
+    objects: [],
+  },
+}

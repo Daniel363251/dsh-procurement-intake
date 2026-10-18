@@ -1,0 +1,1184 @@
+const React = require('react')
+const XLSX = require('@e965/xlsx')
+const { TYPERT_REMOTE } = require('./typert.remote-client.js')
+const { Button: HildaButton } = require('./vendor/hilda-ui/components/Button.tsx')
+const { Toast: HildaToast } = require('./vendor/hilda-ui/components/Toast.tsx')
+const { Select: HildaSelect, SelectTrigger: HildaSelectTrigger, SelectValue: HildaSelectValue, SelectContent: HildaSelectContent, SelectItem: HildaSelectItem } = require('./vendor/hilda-ui/components/Select.tsx')
+const { DayPicker } = require('react-day-picker')
+const { format } = require('date-fns')
+const { zhCN } = require('date-fns/locale')
+const { AIDataTable, defineAITable } = require('@enterprise/ai-table')
+const h = React.createElement
+const aiTableCSS = __AI_TABLE_CSS__
+const hildaUiCSS = __HILDA_UI_CSS__
+const namespace = 'procurementIntake'
+const zh = {
+  category: '采购需求', title: 'NC 请购单导入与认领', subtitle: '导入明细，按物料名称筛选，再确认由你跟进。', pendingTab: '待筛选', mineTab: '我的需求',
+  chooseFile: '选择 NC 导出的 Excel 文件', fileTypeError: '请选择 NC 导出的 .xls 或 .xlsx 文件。', fileSizeError: '文件超过 20 MB，请缩小导出范围后重试。',
+  fileReadError: '文件解析失败，请检查文件格式。', noSheets: '文件中没有可读取的工作表。', noRows: '没有找到可导入的请购单明细。',
+  noHeader: '工作表“{name}”中没有识别到请购单号和物料名称列。', importPreview: '导入预览', lines: '条明细', reviewCount: '条待复核',
+  columnsRecognized: '列已识别', importPool: '导入待筛选池', importing: '正在导入待筛选池…', saveError: '保存失败，请检查浏览器可用空间后重试。', latestImport: '最近导入',
+  keywordLabel: '物料名称关键词', keywordPlaceholder: '例如：PDA 电池，扫码枪', candidates: '候选明细', selectAll: '全选当前表格中的明细', review: '待复核',
+  noCandidates: '暂无待筛选明细。先导入 NC 请购单。', claimSelected: '认领为我的需求', myRequests: '我的采购需求', noMine: '尚未认领采购需求。',
+  localStorageNote: '文件在浏览器解析；数据保存在 Harness 后台，与 AI 共用同一份。', requisitionNo: '请购单', material: '物料名称',
+  duplicateIdentity: '同一文件中存在重复的请购明细标识，请复核', expectedShip: '预计发货日期', rowName: '未命名列{index}', quantity: '数量', lineNo: 'NC明细行',
+  drop: '拖放 NC 导出文件到这里', select: '浏览文件', parsing: '正在解析工作簿…', parseHelp: '请购单号和物料名称列会自动识别', fileHelp: '支持 .xls / .xlsx · 最多 20 MB',
+  previewHelp: '确认导入后，明细进入待筛选池；认领前不会加入我的需求。', chooseSheet: '工作表', reviewHelp: '缺少关键信息或存在重复标识，请在认领前复核。',
+  searchHelp: '多个词任一命中；支持空格、逗号、顿号、分号或竖线。', clear: '清空', selected: '已选', matches: '命中', orders: '张请购单',
+  context: '同单其他明细', contextOnly: '仅作上下文，不会自动认领', claimed: '已认领', notFound: '没有找到匹配的物料', tryShorter: '试试更短的关键词，或清空条件。',
+  imported: '已导入', added: '新增', updated: '更新', sheets: '工作表', source: '来源', expectedDate: '需求日期', spec: '规格 / 型号',
+  purchaseOrder: '采购订单号', supplier: '供应商', materialCode: '物料编码', materialCategory: '物料分类', claimedAt: '认领时间', tableTotal: '共 {count} 条', clearPending: '清空待筛选', clearPendingConfirm: '确认清空所有待筛选明细？已认领的不受影响。', delete: '删除', deleteConfirm: '确认删除这条已认领明细？', shipEdit: '填写发货时间', workspace: '工作台', requests: '采购需求', ordersMenu: '订单交付', issues: '异常处理', fullscreen: '全屏', comingSoon: '该模块正在规划中。', modelSettings: '模型设置', modelLabel: '模型', reasoningEffortLabel: '推理强度', saveSettings: '保存设置', settingsSaved: '设置已保存', settingsSaveError: '保存设置失败，请重试。', materialInfo: '物料信息', orderStatus: '订单办理状态', nextAction: '下一步待办', waitingOn: '等待对象', notes: '处理备注', remainingQuantity: '未到货数量', viewDetails: '查看详情', detailTitle: '采购需求详情', detailBasics: '需求信息', followupSection: '采购跟进', saveDetail: '保存跟进', saving: '保存中…', detailSaved: '跟进信息已保存', notRecorded: '未记录', sourceFile: '导入文件', importedAt: '导入时间', activityHistory: '操作记录', close: '关闭', batchStatus: '批量更新状态', chooseStatus: '选择订单办理状态', batchStatusConfirm: '将为已选中的 {count} 条明细更新订单办理状态。', batchStatusSaved: '已更新 {count} 条明细的办理状态。', batchStatusPartial: '已更新 {updated} 条，{failed} 条失败，请检查后重试。', batchSupplier: '批量更新供应商', batchSupplierConfirm: '将为已选中的 {count} 条明细填写供应商。', batchSupplierSaved: '已为 {count} 条明细填写供应商。', supplierPlaceholder: '如：东集、盈达、汉印', askAi: '直接对 AI 说：帮我筛物料、认领明细、更新发货时间',
+}
+const en = {
+  category: 'Procurement', title: 'Import and claim NC requisitions', subtitle: 'Import lines, filter by material name, then confirm which requests you will own.', pendingTab: 'To review', mineTab: 'My requests',
+  chooseFile: 'Choose an NC Excel export', fileTypeError: 'Choose an NC .xls or .xlsx export.', fileSizeError: 'The file exceeds 20 MB. Narrow the export and try again.',
+  fileReadError: 'Could not read the file. Check its format and try again.', noSheets: 'The file has no readable worksheets.', noRows: 'No requisition lines were found to import.',
+  noHeader: 'Worksheet “{name}” has no recognized requisition number and material name columns.', importPreview: 'Import preview', lines: 'lines', reviewCount: 'need review',
+  columnsRecognized: 'columns recognized', importPool: 'Import to review pool', importing: 'Importing to the review pool…', saveError: 'Could not save. Check available browser storage and try again.', latestImport: 'Latest import',
+  keywordLabel: 'Material name keywords', keywordPlaceholder: 'For example: PDA battery, scanner', candidates: 'Candidate lines', selectAll: 'Select all rows in the table', review: 'Review',
+  noCandidates: 'No lines to review. Import an NC requisition file first.', claimSelected: 'Claim as my request', myRequests: 'My procurement requests', noMine: 'You have not claimed any requests yet.',
+  localStorageNote: 'Files are parsed in the browser. Data is stored in the Harness backend and shared with the AI.', requisitionNo: 'Requisition', material: 'Material name',
+  duplicateIdentity: 'Duplicate requisition line identity in this file; review it.', expectedShip: 'Expected ship date', rowName: 'Unnamed column {index}', quantity: 'Quantity', lineNo: 'NC line',
+  drop: 'Drop an NC export here', select: 'Browse files', parsing: 'Parsing workbook…', parseHelp: 'Requisition number and material name are detected automatically', fileHelp: 'XLS / XLSX · up to 20 MB',
+  previewHelp: 'Import adds lines to the review pool. They become yours only after claiming.', chooseSheet: 'Worksheet', reviewHelp: 'Missing key information or duplicate identity; review before claiming.',
+  searchHelp: 'Match any term; separate with spaces, commas, semicolons, or |.', clear: 'Clear', selected: 'Selected', matches: 'matches', orders: 'requisitions',
+  context: 'Other lines on this requisition', contextOnly: 'For context only; these will not be claimed automatically', claimed: 'Claimed', notFound: 'No matching material found', tryShorter: 'Try a shorter keyword or clear the search.',
+  imported: 'Imported', added: 'added', updated: 'updated', sheets: 'worksheets', source: 'Source', expectedDate: 'Demand date', spec: 'Spec / model',
+  purchaseOrder: 'Purchase order no.', supplier: 'Supplier', materialCode: 'Material code', materialCategory: 'Material category', claimedAt: 'Claimed at', tableTotal: '{count} in total', clearPending: 'Clear pending', clearPendingConfirm: 'Clear all pending lines? Claimed lines are kept.', delete: 'Delete', deleteConfirm: 'Delete this claimed line?', shipEdit: 'Set ship date', workspace: 'Workspace', requests: 'Requests', ordersMenu: 'Orders', issues: 'Issues', fullscreen: 'Fullscreen', comingSoon: 'This module is planned.', modelSettings: 'Model settings', modelLabel: 'Model', reasoningEffortLabel: 'Reasoning effort', saveSettings: 'Save settings', settingsSaved: 'Settings saved', settingsSaveError: 'Could not save settings.', materialInfo: 'Material info', orderStatus: 'Order status', nextAction: 'Next action', waitingOn: 'Waiting on', notes: 'Notes', remainingQuantity: 'Remaining qty', viewDetails: 'View details', detailTitle: 'Procurement request details', detailBasics: 'Request details', followupSection: 'Procurement follow-up', saveDetail: 'Save follow-up', saving: 'Saving…', detailSaved: 'Follow-up saved', notRecorded: 'Not recorded', sourceFile: 'Import file', importedAt: 'Imported at', activityHistory: 'Activity history', close: 'Close', batchStatus: 'Update status in bulk', chooseStatus: 'Choose order status', batchStatusConfirm: 'The order status will be updated for {count} selected lines.', batchStatusSaved: 'Updated the status of {count} lines.', batchStatusPartial: 'Updated {updated}; {failed} failed. Review and retry.', batchSupplier: 'Update supplier in bulk', batchSupplierConfirm: 'The supplier will be filled for {count} selected lines.', batchSupplierSaved: 'Supplier filled for {count} lines.', supplierPlaceholder: 'e.g. a vendor name', askAi: 'Tell the AI: filter materials, claim lines, update ship dates',
+}
+
+const css = `.pc-intake{--pc-color-background:#eef1f6;--pc-color-surface:#ffffff;--pc-color-surface-raised:#f7f9fc;--pc-color-text:#11192d;--pc-color-text-secondary:#50607a;--pc-color-text-muted:#7c889c;--pc-color-border:rgb(124 136 156 / 22%);--pc-color-border-strong:#c8cfdb;--pc-color-border-subtle:rgb(124 136 156 / 13%);--pc-color-border-primary:rgb(49 188 179 / 32%);--pc-color-primary:#31bcb3;--pc-color-primary-hover:#159b92;--pc-color-primary-foreground:#ffffff;--pc-color-primary-subtle:rgb(49 188 179 / 12%);--pc-color-focus:#8daeff;--pc-color-neutral-bg:rgb(124 136 156 / 11%);--pc-color-info:#007aff;--pc-color-info-bg:rgb(0 122 255 / 10%);--pc-color-success:#34c759;--pc-color-success-bg:rgb(52 199 89 / 12%);--pc-color-success-text:#288d4b;--pc-color-warning:#ff9500;--pc-color-warning-bg:rgb(255 149 0 / 13%);--pc-color-warning-text:#aa6708;--pc-color-danger:#ff3b30;--pc-color-danger-foreground:#ffffff;--pc-color-danger-bg:rgb(255 59 48 / 10%);--pc-color-danger-text:#d4483e;--pc-color-brand:#31bcb3;--pc-color-brand-strong:#159b92;--pc-color-brand-glow:rgb(39 186 178 / 22%);--pc-color-surface-hover:#fbfefd;--pc-color-table-header:#eef1f6;--pc-color-row-hover:#f7fafc;--pc-font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans SC",sans-serif;--pc-font-size-sm:0.75rem;--pc-font-size-md:0.875rem;--pc-font-size-table-header:0.6875rem;--pc-font-size-table-cell:0.75rem;--pc-space-1:0.25rem;--pc-space-2:0.5rem;--pc-space-3:0.75rem;--pc-space-4:1rem;--pc-radius-sm:0.375rem;--pc-radius-md:0.5rem;--pc-radius-lg:0.75rem;--pc-radius-pill:999px;--pc-shadow-menu:0 12px 32px rgb(17 25 45 / 12%);--pc-focus-ring:0 0 0 3px rgb(141 174 255 / 40%);box-sizing:border-box;flex:1 1 0;height:100%;min-height:0;width:100%;min-width:0;padding:16px;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;color:var(--pc-color-text);font:13px/1.5 var(--pc-font-sans)}
+[data-ds-dark-theme] .pc-intake{--pc-color-background:var(--dsw-alias-bg-base);--pc-color-surface:var(--dsw-alias-bg-layer-1);--pc-color-surface-raised:var(--dsw-alias-bg-layer-2);--pc-color-text:var(--dsw-alias-label-primary);--pc-color-text-secondary:var(--dsw-alias-label-secondary);--pc-color-text-muted:var(--dsw-alias-label-secondary);--pc-color-border:var(--dsw-alias-border-l1);--pc-color-border-strong:var(--dsw-alias-border-l2);--pc-color-border-subtle:var(--dsw-alias-border-l1);--pc-color-table-header:var(--dsw-alias-bg-layer-2);--pc-color-row-hover:var(--dsw-alias-bg-layer-2);--pc-color-surface-hover:var(--dsw-alias-bg-layer-2);--pc-color-primary:#4cd1c8;--pc-color-primary-hover:#5fdcd4;--pc-color-primary-foreground:#06201f;--pc-color-primary-subtle:rgb(49 188 179 / 16%)}
+.pc-intake *{box-sizing:border-box}.pi-stack{display:flex;flex-direction:column;gap:12px;min-width:0}.pi-eyebrow{margin:0 0 3px;color:var(--pc-color-text-muted);font-size:11px}.pi-title{margin:0;font-size:17px;line-height:1.3;font-weight:650;letter-spacing:-.2px}.pi-subtitle{margin:5px 0 0;color:var(--pc-color-text-secondary);font-size:12px}
+.pi-tabs{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:3px;border:1px solid var(--pc-color-border);border-radius:10px;background:var(--pc-color-surface-raised)}.pi-tab{min-width:0;padding:7px 6px;border:0;border-radius:7px;background:transparent;color:var(--pc-color-text-secondary);font:inherit;font-size:12px;cursor:pointer}.pi-tab[aria-pressed=true]{background:var(--pc-color-surface);color:var(--pc-color-text);box-shadow:0 1px 3px rgb(17 25 45 / 10%);font-weight:600}
+.pi-card{min-width:0;padding:14px;border:1px solid var(--pc-color-border);border-radius:var(--pc-radius-lg);background:var(--pc-color-surface)}.pi-section-title{margin:0;font-size:13px;font-weight:650}.pi-help{margin:4px 0 0;color:var(--pc-color-text-muted);font-size:11px}.pi-upload{display:flex;flex-direction:column;align-items:flex-start;gap:8px;border:1px dashed var(--pc-color-border-strong);background:var(--pc-color-surface-raised)}.pi-upload--active{border-color:var(--pc-color-primary);background:var(--pc-color-primary-subtle)}.pi-upload-name{font-size:12px;font-weight:600;overflow-wrap:anywhere}.pi-button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:34px;padding:7px 12px;border:1px solid var(--pc-color-border-strong);border-radius:var(--pc-radius-md);background:var(--pc-color-surface);color:var(--pc-color-text);font:inherit;font-size:var(--pc-font-size-md);font-weight:600;text-align:center;cursor:pointer;transition:background-color 120ms ease-out,border-color 120ms ease-out,color 120ms ease-out}.pi-button:hover:not(:disabled){background:var(--pc-color-background)}.pi-button:focus-visible,.pi-input:focus-visible,.pi-select:focus-visible,.pi-check:focus-visible{box-shadow:var(--pc-focus-ring);outline:none}.pi-button--primary{width:100%;border-color:var(--pc-color-primary);background:var(--pc-color-primary);color:var(--pc-color-primary-foreground)}.pi-button--primary:hover:not(:disabled){background:var(--pc-color-primary-hover)}.pi-button:disabled{opacity:.55;cursor:not-allowed}.pi-hidden-input{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;clip-path:inset(50%)}
+.pi-inline{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}.pi-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:10px}.pi-stat{min-width:0;padding:8px 6px;border-radius:8px;background:var(--pc-color-surface-raised);text-align:center}.pi-stat strong{display:block;font-size:16px;line-height:1.2}.pi-stat span{display:block;margin-top:3px;color:var(--pc-color-text-muted);font-size:10px}.pi-warn{color:var(--pc-color-warning-text)!important}.pi-sheet-select{display:flex;align-items:center;gap:6px;color:var(--pc-color-text-muted);font-size:11px}.pi-select{max-width:145px;min-width:0;height:32px;padding:4px 7px;border:1px solid var(--pc-color-border-strong);border-radius:var(--pc-radius-md);background:var(--pc-color-surface);color:var(--pc-color-text);font:inherit;font-size:11px}.pi-preview-list,.pi-list{display:flex;flex-direction:column;gap:7px;margin-top:9px}.pi-line{min-width:0;padding:9px;border:1px solid var(--pc-color-border);border-radius:9px;background:var(--pc-color-surface)}.pi-line--context{background:var(--pc-color-surface-raised)}.pi-line-top{display:flex;align-items:flex-start;gap:8px;min-width:0}.pi-check{width:16px;height:16px;flex:0 0 auto;margin:2px 0 0;accent-color:var(--pc-color-primary);cursor:pointer}.pi-line-copy{flex:1;min-width:0}.pi-material{margin:0;font-size:12px;font-weight:620;line-height:1.4;overflow-wrap:anywhere}.pi-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}.pi-badge{display:inline-flex;align-items:center;max-width:100%;padding:2px 7px;border-radius:var(--pc-radius-pill);background:var(--pc-color-primary-subtle);color:var(--pc-color-primary);font-size:11px;font-weight:550;line-height:1.4;overflow-wrap:anywhere}.pi-badge--warn{background:var(--pc-color-warning-bg);color:var(--pc-color-warning-text)}.pi-badge--ok{background:var(--pc-color-success-bg);color:var(--pc-color-success-text)}.pi-meta{display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;margin:7px 0 0;color:var(--pc-color-text-secondary);font-size:10px}.pi-meta span{min-width:0;overflow-wrap:anywhere}.pi-meta b{color:var(--pc-color-text-muted);font-weight:500}.pi-rule{height:1px;margin:10px 0;border:0;background:var(--pc-color-border)}
+.pi-group{min-width:0;overflow:hidden;border:1px solid var(--pc-color-border);border-radius:10px;background:var(--pc-color-surface)}.pi-group-head{padding:9px 10px;background:var(--pc-color-surface-raised)}.pi-group-title{min-width:0;font-size:12px;font-weight:650;overflow-wrap:anywhere}.pi-group-count{flex:0 0 auto;color:var(--pc-color-text-muted);font-size:10px}.pi-context{margin:7px 9px 9px;border-top:1px solid var(--pc-color-border);padding-top:7px}.pi-context summary{color:var(--pc-color-text-secondary);font-size:10px;cursor:pointer}.pi-empty{padding:20px 12px;text-align:center}.pi-empty strong{display:block;font-size:12px}.pi-empty p{margin:5px 0 0;color:var(--pc-color-text-muted);font-size:11px}.pi-success{padding:9px 10px;border:1px solid rgb(52 199 89 / 24%);border-radius:9px;background:var(--pc-color-success-bg);color:var(--pc-color-success-text);font-size:11px}.pi-error{margin:0;padding:8px 9px;border-radius:8px;background:var(--pc-color-danger-bg);color:var(--pc-color-danger-text);font-size:11px}.pi-footer{margin:2px 0 0;padding-top:9px;border-top:1px solid var(--pc-color-border);color:var(--pc-color-text-muted);font-size:10px}.pi-latest{color:var(--pc-color-text-muted);font-size:10px;overflow-wrap:anywhere}
+.pi-table-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}.pi-table-total{flex:0 0 auto;color:var(--pc-color-text-muted);font-size:11px;font-variant-numeric:tabular-nums}.pi-table-wrap{position:relative;margin-top:10px;overflow:auto;max-height:min(430px,58vh);border:1px solid var(--pc-color-border);border-radius:var(--pc-radius-lg);background:var(--pc-color-surface);overscroll-behavior:contain;scrollbar-width:thin}.pi-table{width:100%;min-width:1150px;border-collapse:separate;border-spacing:0;font-size:var(--pc-font-size-table-cell);line-height:1.45}.pi-table thead th{position:sticky;top:0;z-index:2;padding:10px 12px;border-bottom:1px solid var(--pc-color-border);background:var(--pc-color-table-header);color:var(--pc-color-text-secondary);font-size:var(--pc-font-size-table-header);font-weight:700;letter-spacing:.2px;text-align:left;white-space:nowrap}.pi-table thead th.pi-th--num{text-align:right}.pi-table tbody td{padding:10px 12px;border-bottom:1px solid var(--pc-color-border-subtle);vertical-align:top;background:var(--pc-color-surface);color:var(--pc-color-text)}.pi-table tbody tr:last-child td{border-bottom:0}.pi-table tbody tr:hover td{background:var(--pc-color-row-hover)}.pi-table .pi-td--material{position:sticky;left:0;z-index:1;min-width:200px;max-width:230px;border-right:1px solid var(--pc-color-border)}.pi-table thead .pi-th--material{position:sticky;left:0;z-index:3;min-width:200px;max-width:230px;border-right:1px solid var(--pc-color-border)}.pi-table .pi-td--num{text-align:right;font-variant-numeric:tabular-nums}.pi-cell{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pi-cell--muted{color:var(--pc-color-text-muted)}.pi-material-cell{min-width:0;max-width:230px}.pi-material-cell-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:620;color:var(--pc-color-text)}.pi-material-cell-code{display:block;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--pc-color-text-muted);font-size:10px}.pi-eta-chip{display:inline-flex;align-items:center;max-width:100%;padding:2px 7px;border:1px solid var(--pc-color-border-primary);border-radius:6px;background:var(--pc-color-primary-subtle);color:var(--pc-color-primary)}
+.pi-button--small{min-height:28px;padding:3px 10px;font-size:12px;border-radius:var(--pc-radius-md)}.pi-eta-input{width:100%;min-width:96px;height:28px;padding:3px 6px;border:1px solid var(--pc-color-border-strong);border-radius:var(--pc-radius-md);background:var(--pc-color-surface);color:var(--pc-color-text);font:inherit;font-size:11px}.pi-eta-input:focus{border-color:var(--pc-color-primary);box-shadow:var(--pc-focus-ring);outline:none}.pi-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;min-width:0}.pi-menu{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;padding:3px;border:1px solid var(--pc-color-border);border-radius:10px;background:var(--pc-color-surface-raised)}.pi-menu-item{min-width:0;padding:7px 4px;border:0;border-radius:7px;background:transparent;color:var(--pc-color-text-secondary);font:inherit;font-size:12px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pi-menu-item[aria-current=page]{background:var(--pc-color-surface);color:var(--pc-color-text);box-shadow:0 1px 3px rgb(17 25 45 / 10%);font-weight:600}.pi-badge--info{background:var(--pc-color-info-bg);color:var(--pc-color-info)}.pi-badge--neutral{background:var(--pc-color-neutral-bg);color:var(--pc-color-text-secondary)}.pi-badge--danger{background:var(--pc-color-danger-bg);color:var(--pc-color-danger-text)}.pi-ask-ai{margin:2px 0 0;padding:8px 10px;border:1px dashed var(--pc-color-border);border-radius:9px;background:var(--pc-color-surface-raised);color:var(--pc-color-text-muted);font-size:10px;text-align:center}
+.pi-input{background:var(--pc-color-surface);border:1px solid var(--pc-color-border-strong);border-radius:var(--pc-radius-md);color:var(--pc-color-text);font:inherit;font-size:var(--pc-font-size-sm);height:2.375rem;min-width:0;padding:0 var(--pc-space-3);width:100%}.pi-input::placeholder{color:var(--pc-color-text-muted)}.pi-button--danger{background:var(--pc-color-danger);color:var(--pc-color-danger-foreground);border-color:var(--pc-color-danger)}.pi-button--danger:hover:not(:disabled){background:var(--pc-color-danger);filter:brightness(0.93)}.pi-batch-bar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px;padding:10px 12px;border:1px solid var(--pc-color-border);border-radius:var(--pc-radius-lg);background:var(--pc-color-surface-raised)}.pi-batch-date{height:2.25rem;padding:0 8px;border:1px solid var(--pc-color-border-strong);border-radius:var(--pc-radius-md);background:var(--pc-color-surface);color:var(--pc-color-text);font:inherit;font-size:12px}.pi-batch-date-label{display:inline-flex;align-items:center;gap:6px;color:var(--pc-color-text-secondary);font-size:12px}.pi-row-actions{display:flex;align-items:center;gap:6px}.pi-dialog-overlay{background:rgb(17 25 45 / 22%);inset:0;position:fixed;z-index:80;display:flex;align-items:center;justify-content:center;padding:1rem}.pi-dialog-panel{background:var(--pc-color-surface);border:1px solid var(--pc-color-border);border-radius:var(--pc-radius-lg);box-shadow:var(--pc-shadow-menu);max-width:24rem;width:100%;padding:1.25rem}.pi-detail-dialog{max-width:min(700px,100%);max-height:calc(100vh - 32px);overflow-y:auto}.pi-detail-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.pi-detail-section{margin-top:18px;padding-top:14px;border-top:1px solid var(--pc-color-border)}.pi-detail-section-title{margin:0 0 10px;font-size:12px;font-weight:650}.pi-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.pi-detail-value{min-width:0;padding:8px 10px;border-radius:var(--pc-radius-md);background:var(--pc-color-surface-raised)}.pi-detail-value span,.pi-detail-field>span{display:block;color:var(--pc-color-text-muted);font-size:10px}.pi-detail-value strong{display:block;margin-top:3px;color:var(--pc-color-text);font-size:12px;font-weight:550;overflow-wrap:anywhere}.pi-detail-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.pi-detail-field{display:flex;flex-direction:column;gap:5px;min-width:0}.pi-detail-field--wide{grid-column:1/-1}.pi-detail-select{max-width:none}.pi-status-select{width:100%}.pi-detail-input{height:36px}.pi-detail-textarea{width:100%;min-width:0;resize:vertical;padding:8px 10px;border:1px solid var(--pc-color-border-strong);border-radius:var(--pc-radius-md);background:var(--pc-color-surface);color:var(--pc-color-text);font:inherit;font-size:12px}.pi-detail-textarea:focus{border-color:var(--pc-color-primary);box-shadow:var(--pc-focus-ring);outline:none}.pi-detail-textarea:disabled,.pi-detail-input:disabled,.pi-detail-select:disabled{opacity:.6}.pi-detail-history{display:flex;flex-direction:column;gap:8px}.pi-detail-history-item{padding:8px 10px;border-radius:var(--pc-radius-md);background:var(--pc-color-surface-raised)}.pi-detail-history-item strong{font-size:11px}.pi-detail-history-item span{float:right;color:var(--pc-color-text-muted);font-size:10px}.pi-detail-history-item p{margin:4px 0 0;color:var(--pc-color-text-secondary);font-size:11px;overflow-wrap:anywhere}.pi-dialog-title{color:var(--pc-color-text);font-size:1rem;font-weight:650;margin:0}.pi-dialog-description{color:var(--pc-color-text-secondary);font-size:var(--pc-font-size-sm);line-height:1.6;margin:0.5rem 0 0}.pi-dialog-actions{display:flex;gap:0.5rem;justify-content:flex-end;margin-top:1.25rem}/* Variables declaration */
+.rdp-root {
+  --rdp-accent-color: blue; /* The accent color used for selected days and UI elements. */
+  --rdp-accent-background-color: #f0f0ff; /* The accent background color used for selected days and UI elements. */
+
+  --rdp-day-height: 44px; /* The height of the day cells. */
+  --rdp-day-width: 44px; /* The width of the day cells. */
+
+  --rdp-day_button-border-radius: 100%; /* The border radius of the day cells. */
+  --rdp-day_button-border: 2px solid transparent; /* The border of the day cells. */
+  --rdp-day_button-height: 42px; /* The height of the day cells. */
+  --rdp-day_button-width: 42px; /* The width of the day cells. */
+
+  --rdp-selected-border: 2px solid var(--rdp-accent-color); /* The border of the selected days. */
+  --rdp-disabled-opacity: 0.5; /* The opacity of the disabled days. */
+  --rdp-outside-opacity: 0.75; /* The opacity of the days outside the current month. */
+  --rdp-today-color: var(--rdp-accent-color); /* The color of the today's date. */
+
+  --rdp-dropdown-gap: 0.5rem; /* The gap between the dropdowns used in the month captons. */
+
+  --rdp-months-gap: 2rem; /* The gap between the months in the multi-month view. */
+
+  --rdp-nav_button-disabled-opacity: 0.5; /* The opacity of the disabled navigation buttons. */
+  --rdp-nav_button-height: 2.25rem; /* The height of the navigation buttons. */
+  --rdp-nav_button-width: 2.25rem; /* The width of the navigation buttons. */
+  --rdp-nav-height: 2.75rem; /* The height of the navigation bar. */
+
+  --rdp-range_middle-background-color: var(--rdp-accent-background-color); /* The color of the background for days in the middle of a range. */
+  --rdp-range_middle-color: inherit; /* The color of the range text. */
+
+  --rdp-range_start-color: white; /* The color of the range text. */
+  --rdp-range_start-background: linear-gradient(
+    var(--rdp-gradient-direction),
+    transparent 50%,
+    var(--rdp-range_middle-background-color) 50%
+  ); /* Used for the background of the start of the selected range. */
+  --rdp-range_start-date-background-color: var(--rdp-accent-color); /* The background color of the date when at the start of the selected range. */
+
+  --rdp-range_end-background: linear-gradient(
+    var(--rdp-gradient-direction),
+    var(--rdp-range_middle-background-color) 50%,
+    transparent 50%
+  ); /* Used for the background of the end of the selected range. */
+  --rdp-range_end-color: white; /* The color of the range text. */
+  --rdp-range_end-date-background-color: var(--rdp-accent-color); /* The background color of the date when at the end of the selected range. */
+
+  --rdp-week_number-border-radius: 100%; /* The border radius of the week number. */
+  --rdp-week_number-border: 2px solid transparent; /* The border of the week number. */
+
+  --rdp-week_number-height: var(--rdp-day-height); /* The height of the week number cells. */
+  --rdp-week_number-opacity: 0.75; /* The opacity of the week number. */
+  --rdp-week_number-width: var(--rdp-day-width); /* The width of the week number cells. */
+  --rdp-weeknumber-text-align: center; /* The text alignment of the weekday cells. */
+
+  --rdp-weekday-opacity: 0.75; /* The opacity of the weekday. */
+  --rdp-weekday-padding: 0.5rem 0rem; /* The padding of the weekday. */
+  --rdp-weekday-text-align: center; /* The text alignment of the weekday cells. */
+
+  --rdp-gradient-direction: 90deg;
+
+  --rdp-animation_duration: 0.3s;
+  --rdp-animation_timing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.rdp-root[dir="rtl"] {
+  --rdp-gradient-direction: -90deg;
+}
+
+.rdp-root[data-broadcast-calendar="true"] {
+  --rdp-outside-opacity: unset;
+}
+
+/* Root of the component. */
+.rdp-root {
+  position: relative; /* Required to position the navigation toolbar. */
+  box-sizing: border-box;
+}
+
+.rdp-root * {
+  box-sizing: border-box;
+}
+
+.rdp-day {
+  width: var(--rdp-day-width);
+  height: var(--rdp-day-height);
+  text-align: center;
+}
+
+.rdp-day_button {
+  background: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+
+  width: var(--rdp-day_button-width);
+  height: var(--rdp-day_button-height);
+  border: var(--rdp-day_button-border);
+  border-radius: var(--rdp-day_button-border-radius);
+}
+
+.rdp-day_button:disabled {
+  cursor: revert;
+}
+
+.rdp-caption_label {
+  z-index: 1;
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+
+  white-space: nowrap;
+  border: 0;
+}
+
+.rdp-dropdown:focus-visible ~ .rdp-caption_label {
+  outline: 5px auto Highlight;
+  /* biome-ignore lint/suspicious/noDuplicateProperties: backward compatibility */
+  outline: 5px auto -webkit-focus-ring-color;
+}
+
+.rdp-button_next,
+.rdp-button_previous {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  appearance: none;
+
+  width: var(--rdp-nav_button-width);
+  height: var(--rdp-nav_button-height);
+}
+
+.rdp-button_next:disabled,
+.rdp-button_next[aria-disabled="true"],
+.rdp-button_previous:disabled,
+.rdp-button_previous[aria-disabled="true"] {
+  cursor: revert;
+
+  opacity: var(--rdp-nav_button-disabled-opacity);
+}
+
+.rdp-chevron {
+  display: inline-block;
+  fill: var(--rdp-accent-color);
+}
+
+.rdp-root[dir="rtl"] .rdp-nav .rdp-chevron {
+  transform: rotate(180deg);
+  transform-origin: 50%;
+}
+
+.rdp-dropdowns {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rdp-dropdown-gap);
+}
+.rdp-dropdown {
+  z-index: 2;
+
+  /* Reset */
+  opacity: 0;
+  appearance: none;
+  position: absolute;
+  inset-block-start: 0;
+  inset-block-end: 0;
+  inset-inline-start: 0;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  cursor: inherit;
+  border: none;
+  line-height: inherit;
+}
+
+.rdp-dropdown_root {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.rdp-dropdown_root[data-disabled="true"] .rdp-chevron {
+  opacity: var(--rdp-disabled-opacity);
+}
+
+.rdp-month_caption {
+  display: flex;
+  align-content: center;
+  height: var(--rdp-nav-height);
+  font-weight: bold;
+  font-size: large;
+}
+
+.rdp-root[data-nav-layout="around"] .rdp-month,
+.rdp-root[data-nav-layout="after"] .rdp-month {
+  position: relative;
+}
+
+.rdp-root[data-nav-layout="around"] .rdp-month_caption {
+  justify-content: center;
+  margin-inline-start: var(--rdp-nav_button-width);
+  margin-inline-end: var(--rdp-nav_button-width);
+  position: relative;
+}
+
+.rdp-root[data-nav-layout="around"] .rdp-button_previous {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  height: var(--rdp-nav-height);
+  display: inline-flex;
+}
+
+.rdp-root[data-nav-layout="around"] .rdp-button_next {
+  position: absolute;
+  inset-inline-end: 0;
+  top: 0;
+  height: var(--rdp-nav-height);
+  display: inline-flex;
+  justify-content: center;
+}
+
+.rdp-months {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--rdp-months-gap);
+  max-width: fit-content;
+}
+
+.rdp-month_grid {
+  border-collapse: collapse;
+}
+
+.rdp-nav {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+
+  display: flex;
+  align-items: center;
+
+  height: var(--rdp-nav-height);
+}
+
+.rdp-weekday {
+  opacity: var(--rdp-weekday-opacity);
+  padding: var(--rdp-weekday-padding);
+  font-weight: 500;
+  font-size: smaller;
+  text-align: var(--rdp-weekday-text-align);
+  text-transform: var(--rdp-weekday-text-transform);
+}
+
+.rdp-week_number {
+  opacity: var(--rdp-week_number-opacity);
+  font-weight: 400;
+  font-size: small;
+  height: var(--rdp-week_number-height);
+  width: var(--rdp-week_number-width);
+  border: var(--rdp-week_number-border);
+  border-radius: var(--rdp-week_number-border-radius);
+  text-align: var(--rdp-weeknumber-text-align);
+}
+
+/* DAY MODIFIERS */
+.rdp-today:not(.rdp-outside) {
+  color: var(--rdp-today-color);
+}
+
+.rdp-selected {
+  font-weight: bold;
+  font-size: large;
+}
+
+.rdp-selected .rdp-day_button {
+  border: var(--rdp-selected-border);
+}
+
+.rdp-outside {
+  opacity: var(--rdp-outside-opacity);
+}
+
+.rdp-disabled:not(.rdp-selected) {
+  opacity: var(--rdp-disabled-opacity);
+}
+
+.rdp-hidden {
+  visibility: hidden;
+  color: var(--rdp-range_start-color);
+}
+
+.rdp-range_start {
+  background: var(--rdp-range_start-background);
+}
+
+.rdp-range_start .rdp-day_button {
+  background-color: var(--rdp-range_start-date-background-color);
+  color: var(--rdp-range_start-color);
+}
+
+.rdp-range_middle {
+  background-color: var(--rdp-range_middle-background-color);
+}
+
+.rdp-range_middle .rdp-day_button {
+  border: unset;
+  border-radius: unset;
+  color: var(--rdp-range_middle-color);
+}
+
+.rdp-range_end {
+  background: var(--rdp-range_end-background);
+  color: var(--rdp-range_end-color);
+}
+
+.rdp-range_end .rdp-day_button {
+  color: var(--rdp-range_start-color);
+  background-color: var(--rdp-range_end-date-background-color);
+}
+
+.rdp-range_start.rdp-range_end {
+  background: revert;
+}
+
+.rdp-focusable {
+  cursor: pointer;
+}
+
+@keyframes rdp-slide_in_left {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes rdp-slide_in_right {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes rdp-slide_out_left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes rdp-slide_out_right {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.rdp-weeks_before_enter {
+  animation: rdp-slide_in_left var(--rdp-animation_duration)
+    var(--rdp-animation_timing) forwards;
+}
+
+.rdp-weeks_before_exit {
+  animation: rdp-slide_out_left var(--rdp-animation_duration)
+    var(--rdp-animation_timing) forwards;
+}
+
+.rdp-weeks_after_enter {
+  animation: rdp-slide_in_right var(--rdp-animation_duration)
+    var(--rdp-animation_timing) forwards;
+}
+
+.rdp-weeks_after_exit {
+  animation: rdp-slide_out_right var(--rdp-animation_duration)
+    var(--rdp-animation_timing) forwards;
+}
+
+.rdp-root[dir="rtl"] .rdp-weeks_after_enter {
+  animation: rdp-slide_in_left var(--rdp-animation_duration)
+    var(--rdp-animation_timing) forwards;
+}
+
+.rdp-root[dir="rtl"] .rdp-weeks_before_exit {
+  animation: rdp-slide_out_right var(--rdp-animation_duration)
+    var(--rdp-animation_timing) forwards;
+}
+
+.rdp-root[dir="rtl"] .rdp-weeks_before_enter {
+  animation: rdp-slide_in_right var(--rdp-animation_duration)
+    var(--rdp-animation_timing) forwards;
+}
+
+.rdp-root[dir="rtl"] .rdp-weeks_after_exit {
+  animation: rdp-slide_out_left var(--rdp-animation_duration)
+    var(--rdp-animation_timing) forwards;
+}
+
+@keyframes rdp-fade_in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rdp-fade_out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.rdp-caption_after_enter {
+  animation: rdp-fade_in var(--rdp-animation_duration)
+    var(--rdp-animation_timing) forwards;
+}
+
+.rdp-caption_after_exit {
+  animation: rdp-fade_out var(--rdp-animation_duration)
+    var(--rdp-animation_timing) forwards;
+}
+
+.rdp-caption_before_enter {
+  animation: rdp-fade_in var(--rdp-animation_duration)
+    var(--rdp-animation_timing) forwards;
+}
+
+.rdp-caption_before_exit {
+  animation: rdp-fade_out var(--rdp-animation_duration)
+    var(--rdp-animation_timing) forwards;
+}
+.cn-date-picker{position:relative;display:inline-flex}.cn-date-picker-trigger{font-weight:400;justify-content:flex-start;min-width:13rem}.cn-date-picker-placeholder{color:var(--pc-color-text-muted)}.cn-date-picker-popup{position:absolute;top:calc(100% + 6px);left:0;z-index:90;background:var(--pc-color-surface);border:1px solid var(--pc-color-border);border-radius:var(--pc-radius-lg);box-shadow:var(--pc-shadow-menu);color:var(--pc-color-text);padding:0.75rem}.cn-date-picker-popup .rdp-root{--rdp-accent-color:var(--pc-color-primary);--rdp-accent-background-color:var(--pc-color-primary-subtle);--rdp-day-height:2.25rem;--rdp-day-width:2.25rem;--rdp-day_button-height:2rem;--rdp-day_button-width:2rem;--rdp-selected-border:1px solid var(--pc-color-primary);--rdp-today-color:var(--pc-color-primary);font-family:var(--pc-font-sans)}.cn-date-picker-popup .rdp-month_caption{color:var(--pc-color-text);font-size:0.8125rem;font-weight:600}.cn-date-picker-popup .rdp-weekday{color:var(--pc-color-text-muted);font-size:0.6875rem;font-weight:500}.cn-date-picker-popup .rdp-day_button{border-radius:var(--pc-radius-sm);color:var(--pc-color-text-secondary);font:inherit}.cn-date-picker-popup .rdp-day_button:hover:not(:disabled){background:var(--pc-color-neutral-bg)}.cn-date-picker-popup .rdp-selected .rdp-day_button{color:var(--pc-color-primary-foreground)}.cn-date-picker-popup .rdp-today:not(.rdp-outside) .rdp-day_button{font-weight:700}.cn-date-picker-popup .rdp-disabled{color:var(--pc-color-text-muted)}@media(max-width:480px){.pi-detail-grid,.pi-detail-form{grid-template-columns:1fr}.pi-detail-field--wide{grid-column:auto}}@media(max-width:360px){.pc-intake{padding:10px}.pi-card{padding:10px}.pi-meta{grid-template-columns:1fr}.pi-group-count{max-width:90px;text-align:right}}
+`
+
+function text(value) { return value == null ? '' : String(value).trim() }
+function normalize(value) { return text(value).replace(/[\s\u00a0]/g, '').toLowerCase() }
+function column(headers, aliases) { const names = new Set(aliases.map(normalize)); return headers.findIndex(header => names.has(normalize(header))) }
+function field(row, headers, aliases) { const index = column(headers, aliases); return index < 0 ? '' : text(row[index]) }
+function parseSheet(name, worksheet, t) {
+  const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '', raw: false, blankrows: false })
+  const headerIndex = rows.findIndex((row, index) => index < 15 && column(row.map(text), ['请购单号', '请购单编号', '申请单号']) >= 0 && column(row.map(text), ['物料名称', '商品名称']) >= 0)
+  if (headerIndex < 0) throw new Error(`noHeader:${name}`)
+  const originalHeaders = rows[headerIndex].map(text)
+  const headers = originalHeaders.map((header, index) => header || t('rowName').replace('{index}', String(index + 1)))
+  const baseRows = rows.slice(headerIndex + 1).map((row, offset) => {
+    const sourceRowNumber = headerIndex + offset + 2
+    const requisitionNo = field(row, headers, ['请购单号', '请购单编号', '申请单号'])
+    const lineNo = field(row, headers, ['行号', '明细行号', '请购单行号'])
+    const materialCode = field(row, headers, ['物料编码', '物料代码', '存货编码'])
+    const materialName = field(row, headers, ['物料名称', '商品名称'])
+    const identity = requisitionNo && (materialCode || materialName) ? [normalize(requisitionNo), normalize(lineNo), normalize(materialCode || materialName)].join('|') : `row:${sourceRowNumber}`
+    const sourceFields = {}
+    headers.forEach((header, index) => { if (normalize(header) !== normalize('预计发货时间')) { const key = Object.hasOwn(sourceFields, header) ? `${header}__${index + 1}` : header; sourceFields[key] = text(row[index]) } })
+    const reviewReason = !requisitionNo ? 'missing:requisitionNo' : !materialName ? 'missing:materialName' : ''
+    return {
+      identity, sourceRowNumber, requisitionNo, lineNo, materialCode, materialName,
+      materialCategory: field(row, headers, ['物料分类', '物料类别']),
+      specification: field(row, headers, ['规格', '规格型号']), model: field(row, headers, ['型号']), unit: field(row, headers, ['主单位', '单位']),
+      quantity: field(row, headers, ['主数量', '请购数量', '数量']), demandDate: field(row, headers, ['需求日期']), suggestedOrderDate: field(row, headers, ['建议订货日期']),
+      remainingQuantity: field(row, headers, ['未到货数量']), purchaseOrderNo: field(row, headers, ['订单号', '采购订单号']), supplier: field(row, headers, ['供应商']),
+      sourceFields, buyerEtaFromFile: field(row, headers, ['预计发货时间']), expectedShipAt: '', reviewReason,
+    }
+  }).filter(row => Object.values(row.sourceFields).some(Boolean) || row.requisitionNo || row.materialName || row.buyerEtaFromFile)
+  const occurrences = new Map(), totals = new Map()
+  baseRows.forEach(row => totals.set(row.identity, (totals.get(row.identity) || 0) + 1))
+  const lines = baseRows.map(row => {
+    const occurrence = occurrences.get(row.identity) || 0; occurrences.set(row.identity, occurrence + 1)
+    const identityKey = row.identity.startsWith('row:') ? row.identity : `${row.identity}#${occurrence + 1}`
+    const duplicate = (totals.get(row.identity) || 0) > 1
+    return { ...row, id: identityKey, identityKey, isMine: false, confirmedAt: null, confirmationBatchId: null, notes: '', needsReview: Boolean(row.reviewReason) || duplicate, reviewReason: row.reviewReason || (duplicate ? 'duplicateIdentity' : ''), sourceFileName: '', importedAt: '', orderStatus: '', nextAction: '', waitingOn: '', activityLog: [] }
+  })
+  return { name, headers: originalHeaders.filter(Boolean), lines, warningCount: lines.filter(row => row.needsReview).length }
+}
+function parseWorkbook(buffer, t) {
+  const workbook = XLSX.read(buffer, { type: 'array', cellDates: true, dense: false })
+  if (!workbook.SheetNames.length) throw new Error('noSheets')
+  const parsed = [], failures = []
+  for (const name of workbook.SheetNames) { try { const sheet = parseSheet(name, workbook.Sheets[name], t); if (sheet.lines.length) parsed.push(sheet) } catch (error) { failures.push(error instanceof Error ? error.message : `noHeader:${name}`) } }
+  if (!parsed.length) throw new Error(failures[0] || 'noRows')
+  return parsed
+}
+function keywords(value) { return value.split(/[\s,，、;；|]+/).map(word => word.trim()).filter(Boolean) }
+function display(value) { return value ? String(value) : '—' }
+function qty(row) { return [row.quantity, row.unit].filter(Boolean).join(' ') || '—' }
+function meta(label, value) { return h('span', { key: label }, h('b', null, `${label}：`), display(value)) }
+function lineCard(row, t, selected, onSelect, context = false) {
+  const reviewText = row.reviewReason === 'duplicateIdentity' ? t('duplicateIdentity') : row.reviewReason === 'missing:requisitionNo' ? `${t('requisitionNo')}缺失` : row.reviewReason === 'missing:materialName' ? `${t('material')}缺失` : row.reviewReason
+  return h('article', { className: `pi-line${context ? ' pi-line--context' : ''}`, key: row.id },
+    h('div', { className: 'pi-line-top' }, !context && h('input', { className: 'pi-check', type: 'checkbox', checked: selected, 'aria-label': `${t('select')} ${row.materialName || row.requisitionNo}`, onChange: event => onSelect(event.target.checked) }),
+      h('div', { className: 'pi-line-copy' }, h('p', { className: 'pi-material' }, row.materialName || t('material')),
+        h('div', { className: 'pi-badges' }, row.needsReview && h('span', { className: 'pi-badge pi-badge--warn', title: reviewText }, t('review')), row.purchaseOrderNo && h('span', { className: 'pi-badge' }, `订单 ${row.purchaseOrderNo}`), row.isMine && h('span', { className: 'pi-badge pi-badge--ok' }, t('claimed'))),
+        h('div', { className: 'pi-meta' }, meta(t('requisitionNo'), row.requisitionNo), meta(t('lineNo'), row.lineNo), meta('编码', row.materialCode), meta(t('spec'), [row.specification, row.model].filter(Boolean).join(' / ')), meta(t('quantity'), qty(row)), meta(t('expectedDate'), row.demandDate), row.remainingQuantity ? meta('未到货', row.remainingQuantity) : null, row.supplier ? meta('供应商', row.supplier) : null))))
+}
+function errorText(message, t) { if (message === 'noSheets') return t('noSheets'); if (message === 'noRows') return t('noRows'); if (message.startsWith('noHeader:')) return t('noHeader').replace('{name}', message.slice('noHeader:'.length)); return t('fileReadError') }
+function formatDateTime(value) { if (!value) return ''; const date = new Date(value); if (Number.isNaN(date.getTime())) return ''; const pad = number => String(number).padStart(2, '0'); return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}` }
+function detailValue(label, value) { return h('div', { className: 'pi-detail-value' }, h('span', null, label), h('strong', null, value == null || value === '' ? '—' : String(value))) }
+function cell(value, className) { const string = value ? String(value) : ''; return h('span', { className: `pi-cell${className ? ' ' + className : ''}`, title: string || undefined }, display(string)) }
+function etaValue(row) { const value = text(row.expectedShipAt || row.buyerEtaFromFile); return value ? h('span', { className: 'pi-eta-chip', title: value }, value) : h('span', { className: 'pi-cell pi-cell--muted' }, '—') }
+function orderStatusBadge(row) { const status = row.orderStatus || ''; if (!status) return h('span', { className: 'pi-cell pi-cell--muted' }, '—'); const variant = status === '已审批' || status === '已通知供应商' ? 'pi-badge--ok' : status === '待审批' || status === 'NC待提交' ? 'pi-badge--warn' : status === 'NC已保存' ? 'pi-badge--info' : 'pi-badge--neutral'; return h('span', { className: `pi-badge ${variant}` }, status) }
+const CALENDAR_ICON = h('svg', { 'aria-hidden': true, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round', width: 16, height: 16 }, h('rect', { x: 3, y: 5, width: 18, height: 16, rx: 2 }), h('path', { d: 'M16 3v4M8 3v4M3 10h18' }))
+const TRASH_ICON = h('svg', { 'aria-hidden': true, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round', width: 16, height: 16 }, h('path', { d: 'M4 7h16M10 11v6M14 11v6M5 7l1 14h12l1-14M9 7V4h6v3' }))
+const PLUS_ICON = h('svg', { 'aria-hidden': true, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round', width: 16, height: 16 }, h('path', { d: 'M12 5v14M5 12h14' }))
+function DatePicker({ value, onValueChange, placeholder = '选择日期', disabled, 'aria-label': ariaLabel }) {
+  const [open, setOpen] = React.useState(false)
+  const ref = React.useRef(null)
+  React.useEffect(() => {
+    if (!open) return
+    const onDoc = (event) => { if (ref.current && !ref.current.contains(event.target)) setOpen(false) }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [open])
+  const label = value ? format(value, 'yyyy年M月d日', { locale: zhCN }) : placeholder
+  return h('div', { ref, className: 'cn-date-picker' },
+    h('button', { type: 'button', className: 'pi-button pi-button--small cn-date-picker-trigger', disabled, 'aria-label': ariaLabel || placeholder, onClick: () => setOpen(prev => !prev) },
+      CALENDAR_ICON, value ? label : h('span', { className: 'cn-date-picker-placeholder' }, placeholder)),
+    open && h('div', { className: 'cn-date-picker-popup' },
+      h(DayPicker, { mode: 'single', selected: value, onSelect: (date) => { onValueChange?.(date); if (date) setOpen(false) }, locale: zhCN, showOutsideDays: true })))
+}
+
+const PENDING_QUERY_FIELD_IDS = ['materialName', 'materialCode', 'materialCategory', 'specification', 'requisitionNo', 'lineNo', 'quantity', 'demandDate', 'review']
+const MINE_QUERY_FIELD_IDS = ['materialName', 'materialCode', 'materialCategory', 'specification', 'requisitionNo', 'lineNo', 'quantity', 'remainingQuantity', 'purchaseOrderNo', 'supplier', 'orderStatus', 'demandDate', 'expectedShipAt', 'notes', 'confirmedAt']
+const ORDER_STATUS_OPTIONS = ['NC已保存', 'NC待提交', '待审批', '已审批', '已通知供应商']
+
+function IntakeBody({ t, data, sessionId }) {
+  const [store, setStore] = React.useState({ pendingRows: [], mineRows: [], pendingContextRows: [], pendingTotal: 0, mineTotal: 0, pendingFilteredTotal: 0, mineFilteredTotal: 0, pendingRequisitionCount: 0, pendingFilteredRequisitionCount: 0, latestImport: null })
+  const [menu, setMenu] = React.useState('requests')
+  const [modelOptions, setModelOptions] = React.useState({ models: [], reasoningEfforts: [] })
+  const [modelSettings, setModelSettings] = React.useState({ model: 'deepseek-v4-pro', reasoningEffort: 'high' })
+  const loadModelSettings = React.useCallback(async () => {
+    try {
+      const [options, settings] = await Promise.all([data.listModelOptions(), data.getModelSettings()])
+      setModelOptions(options)
+      setModelSettings(settings)
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : String(caught))
+    }
+  }, [data])
+  React.useEffect(() => { void loadModelSettings() }, [loadModelSettings])
+  async function saveModelSettings() {
+    try {
+      await data.updateModelSettings(modelSettings.model, modelSettings.reasoningEffort)
+      setSuccess(t('settingsSaved'))
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : String(caught))
+    }
+  }
+  const [requestView, setRequestView] = React.useState('intake')
+  const [pendingPage, setPendingPage] = React.useState(1)
+  const [minePage, setMinePage] = React.useState(1)
+  const [pendingPageSize, setPendingPageSize] = React.useState(10)
+  const [minePageSize, setMinePageSize] = React.useState(10)
+  const [pendingLoading, setPendingLoading] = React.useState(false)
+  const [mineLoading, setMineLoading] = React.useState(false)
+  const [query, setQuery] = React.useState('')
+  const [fileName, setFileName] = React.useState('')
+  const [sheets, setSheets] = React.useState([])
+  const [sheetIndex, setSheetIndex] = React.useState(0)
+  const [selected, setSelected] = React.useState(new Set())
+  const [error, setError] = React.useState('')
+  const [success, setSuccess] = React.useState('')
+  const [parsing, setParsing] = React.useState(false)
+  const [importing, setImporting] = React.useState(false)
+  const [dragActive, setDragActive] = React.useState(false)
+  const [mineSelected, setMineSelected] = React.useState(new Set())
+  const [shipDate, setShipDate] = React.useState(undefined)
+  const [shipDialogOpen, setShipDialogOpen] = React.useState(false)
+  const [statusDialogOpen, setStatusDialogOpen] = React.useState(false)
+  const [batchStatusDraft, setBatchStatusDraft] = React.useState('')
+  const [savingBatchStatus, setSavingBatchStatus] = React.useState(false)
+  const [supplierDialogOpen, setSupplierDialogOpen] = React.useState(false)
+  const [batchSupplierDraft, setBatchSupplierDraft] = React.useState('')
+  const [savingBatchSupplier, setSavingBatchSupplier] = React.useState(false)
+  const statusDialogOverlayRef = React.useRef(null)
+  const detailDialogOverlayRef = React.useRef(null)
+  const [detailRow, setDetailRow] = React.useState(null)
+  const [detailDraft, setDetailDraft] = React.useState(null)
+  const [savingDetail, setSavingDetail] = React.useState(false)
+  const fileInputRef = React.useRef(null)
+  const listRequestIds = React.useRef({ pending: 0, mine: 0 })
+  const keywordRef = React.useRef(query)
+  const previousKeyword = React.useRef(query)
+  const pendingTableQuery = React.useRef({ filters: [], sorts: [] })
+  const mineTableQuery = React.useRef({ filters: [], sorts: [] })
+  const words = keywords(query), sheet = sheets[sheetIndex]
+  const pending = store.pendingRows
+  const mine = store.mineRows
+  const candidates = pending
+  const selectedCount = selected.size
+  const requisitionCount = store.pendingRequisitionCount
+
+  const loadPage = React.useCallback(async (status, requestedPage, requestedPageSize) => {
+    const requestId = ++listRequestIds.current[status]
+    const setLoading = status === 'pending' ? setPendingLoading : setMineLoading
+    setLoading(true)
+    try {
+      const tableQuery = status === 'pending' ? pendingTableQuery.current : mineTableQuery.current
+      const sorts = tableQuery.sorts
+      const sort = sorts.length > 1 ? sorts : sorts[0]
+      const request = { status, page: requestedPage, pageSize: requestedPageSize, sort, filters: tableQuery.filters, keywords: status === 'pending' ? keywordRef.current : '' }
+      const value = await data.list(request.status, request.page, request.pageSize, request.sort, request.filters, request.keywords)
+      if (requestId !== listRequestIds.current[status]) return value
+      if (status === 'pending') {
+        setPendingPage(value.page)
+        setStore(current => ({ ...current, pendingRows: value.rows || [], pendingContextRows: value.contextRows || [], pendingTotal: value.statusCount ?? value.count ?? value.rows?.length ?? 0, pendingFilteredTotal: value.count ?? value.rows?.length ?? 0, pendingRequisitionCount: value.requisitionCount, pendingFilteredRequisitionCount: value.matchingRequisitionCount, latestImport: value.latestImport || null }))
+      } else {
+        setMinePage(value.page)
+        setStore(current => ({ ...current, mineRows: value.rows || [], mineTotal: value.statusCount ?? value.count ?? value.rows?.length ?? 0, mineFilteredTotal: value.count ?? value.rows?.length ?? 0, latestImport: value.latestImport || null }))
+        setDetailRow(current => current ? (value.rows || []).find(row => row.id === current.id) || current : current)
+      }
+      return value
+    } catch (caught) {
+      if (requestId === listRequestIds.current[status]) setError(caught instanceof Error ? caught.message : String(caught))
+      throw caught
+    } finally {
+      if (requestId === listRequestIds.current[status]) setLoading(false)
+    }
+  }, [data])
+  const refresh = React.useCallback(async () => {
+    await Promise.all([
+      loadPage('pending', pendingPage, pendingPageSize),
+      loadPage('mine', minePage, minePageSize),
+    ])
+  }, [loadPage, minePage, minePageSize, pendingPage, pendingPageSize])
+  React.useEffect(() => {
+    void Promise.all([
+      loadPage('pending', 1, 10),
+      loadPage('mine', 1, 10),
+    ]).catch(() => {})
+  }, [loadPage])
+  React.useEffect(() => {
+    if (previousKeyword.current === query) return
+    previousKeyword.current = query
+    setSelected(new Set())
+    setPendingPage(1)
+    const timer = setTimeout(() => { void loadPage('pending', 1, pendingPageSize).catch(() => {}) }, 250)
+    return () => clearTimeout(timer)
+  }, [loadPage, pendingPageSize, query])
+
+  function updateTableQuery(status, queryState) {
+    const target = status === 'pending' ? pendingTableQuery : mineTableQuery
+    target.current = queryState
+    if (status === 'pending') setPendingPage(1)
+    else setMinePage(1)
+    void loadPage(status, 1, status === 'pending' ? pendingPageSize : minePageSize).catch(() => {})
+  }
+
+  function changePage(status, page) {
+    if (status === 'pending') {
+      setPendingPage(page)
+      void loadPage(status, page, pendingPageSize)
+    } else {
+      setMinePage(page)
+      void loadPage(status, page, minePageSize)
+    }
+  }
+  function changePageSize(status, pageSize) {
+    if (status === 'pending') {
+      setPendingPageSize(pageSize); setPendingPage(1)
+      void loadPage(status, 1, pageSize)
+    } else {
+      setMinePageSize(pageSize); setMinePage(1)
+      void loadPage(status, 1, pageSize)
+    }
+  }
+  function refreshTable(status) {
+    const page = status === 'pending' ? pendingPage : minePage
+    const pageSize = status === 'pending' ? pendingPageSize : minePageSize
+    void loadPage(status, page, pageSize).catch(() => {})
+  }
+
+  function chooseFile(file) {
+    if (!file) return
+    setError(''); setSuccess(''); setFileName(file.name); setSheets([]); setSheetIndex(0)
+    if (!/\.xlsx?$/i.test(file.name)) { setError(t('fileTypeError')); return }
+    if (file.size > 20 * 1024 * 1024) { setError(t('fileSizeError')); return }
+    setParsing(true)
+    file.arrayBuffer().then(buffer => { const parsed = parseWorkbook(buffer, t); setSheets(parsed); setSheetIndex(Math.max(0, parsed.findIndex(item => item.lines.length > 0))) })
+      .catch(caught => setError(errorText(caught instanceof Error ? caught.message : '', t))).finally(() => setParsing(false))
+  }
+  async function claim() {
+    const ids = [...selected]
+    if (!ids.length) return
+    try {
+      await data.claim(ids)
+      setSelected(new Set()); setRequestView('mine'); setSuccess(''); setError('')
+      await refresh()
+    } catch { setError(t('saveError')) }
+  }
+  async function doImport() {
+    if (!sheet || importing) return
+    setImporting(true); setError(''); setSuccess('')
+    try {
+      const result = await data.importLines(sheet.lines, fileName, sheet.name)
+      setSheets([]); setSelected(new Set()); keywordRef.current = ''; previousKeyword.current = ''; setQuery(''); setError('')
+      setSuccess(`${t('imported')} ${sheet.lines.length} ${t('lines')} · ${t('added')} ${result.importedCount} · ${t('updated')} ${result.updatedCount}`)
+      await refresh()
+    } catch { setError(t('saveError')) }
+    finally { setImporting(false) }
+  }
+  async function clearPending() {
+    if (!window.confirm(t('clearPendingConfirm'))) return
+    try {
+      await data.clearPending()
+      setSelected(new Set()); keywordRef.current = ''; previousKeyword.current = ''; setQuery(''); setPendingPage(1); setError(''); setSuccess('')
+      await refresh()
+    } catch { setError(t('saveError')) }
+  }
+  async function deleteOwned(id) {
+    if (!window.confirm(t('deleteConfirm'))) return
+    try {
+      await data.deleteOwned([id])
+      setError(''); await refresh()
+    } catch { setError(t('saveError')) }
+  }
+  function openDetails(row) {
+    setDetailRow(row)
+    setDetailDraft({
+      supplier: row.supplier || '',
+      orderStatus: row.orderStatus || '',
+      expectedShipAt: row.expectedShipAt || row.buyerEtaFromFile || '',
+      nextAction: row.nextAction || '',
+      waitingOn: row.waitingOn || '',
+      notes: row.notes || '',
+    })
+    setError('')
+  }
+  async function saveDetails() {
+    if (!detailRow || !detailDraft || savingDetail) return
+    setSavingDetail(true)
+    setError('')
+    try {
+      const saved = await data.updateLine(detailRow.id, detailDraft)
+      setDetailRow(saved)
+      setDetailDraft({ supplier: saved.supplier || '', orderStatus: saved.orderStatus || '', expectedShipAt: saved.expectedShipAt || saved.buyerEtaFromFile || '', nextAction: saved.nextAction || '', waitingOn: saved.waitingOn || '', notes: saved.notes || '' })
+      setSuccess(t('detailSaved'))
+      await loadPage('mine', minePage, minePageSize)
+      setDetailRow(null)
+      setDetailDraft(null)
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('saveError'))
+    } finally {
+      setSavingDetail(false)
+    }
+  }
+  async function saveShip(row, value) {
+    const next = text(value)
+    if (next === text(row.expectedShipAt || row.buyerEtaFromFile)) return
+    try {
+      await data.updateLine(row.id, { expectedShipAt: next })
+      setError(''); await refresh()
+    } catch { setError(t('saveError')) }
+  }
+  const toggle = (id, checked) => setSelected(previous => { const next = new Set(previous); checked ? next.add(id) : next.delete(id); return next })
+  const toggleMine = (id, checked) => setMineSelected(previous => { const next = new Set(previous); checked ? next.add(id) : next.delete(id); return next })
+  async function applyStatusToSelected() {
+    if (!mineSelected.size || !batchStatusDraft || savingBatchStatus) return
+    const ids = [...mineSelected]
+    const orderStatus = batchStatusDraft === '__clear__' ? '' : batchStatusDraft
+    const failedIds = []
+    setSavingBatchStatus(true)
+    setError('')
+    try {
+      for (const id of ids) {
+        try { await data.updateLine(id, { orderStatus }) } catch { failedIds.push(id) }
+      }
+      await loadPage('mine', minePage, minePageSize)
+      setStatusDialogOpen(false)
+      setBatchStatusDraft('')
+      setMineSelected(new Set(failedIds))
+      if (failedIds.length) {
+        setError(t('batchStatusPartial').replace('{updated}', String(ids.length - failedIds.length)).replace('{failed}', String(failedIds.length)))
+      } else {
+        setSuccess(t('batchStatusSaved').replace('{count}', String(ids.length)))
+      }
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('saveError'))
+    } finally {
+      setSavingBatchStatus(false)
+    }
+  }
+  async function applyShipToSelected() {
+    if (!shipDate || !mineSelected.size) return
+    try {
+      const shipValue = format(shipDate, 'yyyy-MM-dd')
+      for (const id of mineSelected) await data.updateLine(id, { expectedShipAt: shipValue })
+      setMineSelected(new Set()); setShipDate(undefined); setShipDialogOpen(false); setError(''); await refresh()
+    } catch { setError(t('saveError')) }
+  }
+  async function applySupplierToSelected() {
+    if (!mineSelected.size || savingBatchSupplier) return
+    const supplier = batchSupplierDraft.trim()
+    if (!supplier) return
+    const ids = [...mineSelected]
+    setSavingBatchSupplier(true)
+    setError('')
+    try {
+      await data.updateSuppliers(ids, supplier)
+      setSupplierDialogOpen(false)
+      setBatchSupplierDraft('')
+      setMineSelected(new Set())
+      setSuccess(t('batchSupplierSaved').replace('{count}', String(ids.length)))
+      await loadPage('mine', minePage, minePageSize)
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('saveError'))
+    } finally {
+      setSavingBatchSupplier(false)
+    }
+  }
+  async function deleteSelected() {
+    if (!mineSelected.size) return
+    if (!window.confirm(t('deleteConfirm'))) return
+    try {
+      await data.deleteOwned([...mineSelected])
+      setMineSelected(new Set()); setError(''); await refresh()
+    } catch { setError(t('saveError')) }
+  }
+
+  const uploadSection = h('section', { className: 'pi-card' },
+    h('div', { className: 'pi-inline' }, h('h2', { className: 'pi-section-title' }, t('chooseFile')), parsing && h('span', { className: 'pi-badge' }, t('parsing'))),
+    h('p', { className: 'pi-help' }, t('previewHelp')),
+    h('div', { className: `pi-card pi-upload${dragActive ? ' pi-upload--active' : ''}`, style: { marginTop: 9 }, onDragEnter: event => { event.preventDefault(); setDragActive(true) }, onDragOver: event => event.preventDefault(), onDragLeave: event => { if (!event.currentTarget.contains(event.relatedTarget)) setDragActive(false) }, onDrop: event => { event.preventDefault(); setDragActive(false); chooseFile(event.dataTransfer.files[0]) } },
+      h('span', { className: 'pi-upload-name' }, parsing ? t('parsing') : fileName || t('drop')), h('span', { className: 'pi-help', style: { margin: 0 } }, t('fileHelp')),
+      h('button', { type: 'button', className: 'pi-button', disabled: parsing, onClick: () => fileInputRef.current && fileInputRef.current.click() }, t('select')),
+      h('input', { ref: fileInputRef, className: 'pi-hidden-input', type: 'file', tabIndex: -1, 'aria-label': t('chooseFile'), accept: '.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', disabled: parsing, onChange: event => { chooseFile(event.currentTarget.files && event.currentTarget.files[0]); event.currentTarget.value = '' } })),
+    store.latestImport && h('p', { className: 'pi-latest' }, `${t('latestImport')}：${store.latestImport.fileName} · ${store.latestImport.sheetName} · ${new Date(store.latestImport.importedAt).toLocaleString()}`))
+
+  const previewSection = sheet && h('section', { className: 'pi-card' },
+    h('div', { className: 'pi-inline' }, h('h2', { className: 'pi-section-title' }, `${t('importPreview')} · ${sheet.lines.length}`),
+      sheets.length > 1 ? h('label', { className: 'pi-sheet-select' }, `${t('chooseSheet')}：`, h('select', { className: 'pi-select', value: sheetIndex, onChange: event => setSheetIndex(Number(event.target.value)) }, ...sheets.map((item, index) => h('option', { key: item.name, value: index }, item.name)))) : h('span', { className: 'pi-badge' }, sheet.name)),
+    h('p', { className: 'pi-help' }, `${sheet.headers.length} ${t('columnsRecognized')} · ${sheet.warningCount} ${t('reviewCount')}`),
+    h('div', { className: 'pi-stats' }, ...[[sheet.lines.length, t('lines')], [new Set(sheet.lines.map(row => row.requisitionNo).filter(Boolean)).size, t('requisitionNo')], [sheet.warningCount, t('reviewCount')]].map(([value, label]) => h('div', { className: 'pi-stat', key: label }, h('strong', { className: sheet.warningCount && label === t('reviewCount') ? 'pi-warn' : '' }, value), h('span', null, label)))),
+    sheet.warningCount > 0 && h('p', { className: 'pi-help pi-warn', role: 'status' }, t('reviewHelp')),
+    h('div', { className: 'pi-preview-list' }, ...sheet.lines.slice(0, 5).map(row => lineCard(row, t, false, null))),
+    sheet.lines.length > 5 && h('p', { className: 'pi-help' }, `预览前 5 条；确认后导入全部 ${sheet.lines.length} 条。`),
+    h('button', { type: 'button', className: 'pi-button pi-button--primary', style: { marginTop: 10 }, disabled: parsing || importing, 'aria-busy': importing, onClick: doImport }, importing && h('span', { className: 'pi-spinner', 'aria-hidden': 'true' }), importing ? t('importing') : `${t('importPool')} · ${sheet.lines.length}`))
+
+  const searchSection = h('section', { className: 'pi-card' },
+    h('div', { className: 'pi-inline' }, h('h2', { className: 'pi-section-title' }, t('candidates')), h('span', { className: 'pi-badge' }, `${store.pendingTotal} · ${requisitionCount} ${t('orders')}`)),
+    h('p', { className: 'pi-help' }, t('searchHelp')),
+    h('label', { style: { display: 'block', marginTop: 9 } }, h('span', { className: 'pi-search-label' }, t('keywordLabel')), h('input', { className: 'pi-input', value: query, onChange: event => { keywordRef.current = event.target.value; setQuery(event.target.value) }, placeholder: t('keywordPlaceholder'), type: 'search' })),
+    store.pendingTotal > 0 && h('button', { type: 'button', className: 'pi-button pi-button--danger', style: { marginTop: 7 }, onClick: clearPending }, `${t('clearPending')}（${store.pendingTotal}）`),
+    h('p', { className: 'pi-resultline', 'aria-live': 'polite' }, h('strong', null, store.pendingFilteredTotal), ` ${t('matches')} · ${store.pendingFilteredRequisitionCount} ${t('orders')}`))
+
+  const batchSection = (candidates.length > 0 || selectedCount > 0) && h('section', { className: 'pi-batch', 'aria-label': t('claimSelected') },
+    h('div', { className: 'pi-inline', style: { marginBottom: 8 } },
+      h('span', { className: 'pi-batch-count' }, `${t('selected')} ${selectedCount} / ${store.pendingTotal}`)),
+    h('button', { type: 'button', className: 'pi-button pi-button--primary', disabled: !selectedCount, onClick: claim }, `${t('claimSelected')} · ${selectedCount}`))
+
+  const aiAdapter = React.useMemo(() => createAiAdapter(data, sessionId), [data, sessionId])
+  const pendingDefinition = React.useMemo(() => defineAITable({
+    id: 'procurement.pending-lines', rowKey: row => row.id, ai: { mode: 'adapter', adapter: aiAdapter },
+    fields: [
+      { id: 'materialName', label: t('material'), type: 'text', accessor: 'materialName', width: 210 },
+      { id: 'materialCode', label: t('materialCode'), type: 'text', accessor: 'materialCode', width: 120 },
+      { id: 'materialCategory', label: t('materialCategory'), type: 'text', accessor: 'materialCategory', width: 120 },
+      { id: 'specification', label: t('spec'), type: 'text', read: row => [row.specification, row.model].filter(Boolean).join(' · '), width: 150 },
+      { id: 'requisitionNo', label: t('requisitionNo'), type: 'text', accessor: 'requisitionNo', width: 140 },
+      { id: 'lineNo', label: t('lineNo'), type: 'text', accessor: 'lineNo', width: 90 },
+      { id: 'quantity', label: t('quantity'), type: 'number', read: row => Number(row.quantity) || 0, format: (_value, row) => qty(row), width: 100 },
+      { id: 'demandDate', label: t('expectedDate'), type: 'date', accessor: 'demandDate', width: 120 },
+      { id: 'sameRequisitionContext', label: t('context'), type: 'text', read: row => words.length ? store.pendingContextRows.filter(item => item.requisitionNo === row.requisitionNo && item.id !== row.id) : [], render: value => value.length ? h('details', null, h('summary', null, `${t('context')} · ${value.length}（${t('contextOnly')}）`), h('div', { className: 'pi-list' }, ...value.map(row => h('div', { key: row.id, className: 'pi-line pi-line--context' }, h('p', { className: 'pi-material' }, row.materialName || t('material')), h('p', { className: 'pi-help' }, [row.materialCode, row.specification, row.model].filter(Boolean).join(' · ')))))) : '—', filterable: false, groupable: false, sortable: false, colorable: false, aiReadable: false, width: 220 },
+      { id: 'review', label: t('review'), type: 'tag', read: row => row.needsReview ? t('review') : '', groupable: true, width: 95 },
+    ],
+  }), [t, pending, query, store.pendingContextRows])
+  const pendingSelection = Object.fromEntries([...selected].map(id => [id, true]))
+  const pendingSelectColumn = {
+    id: '__select__', size: 42, enableSorting: false, enableHiding: false,
+    header: ({ table }) => {
+      const pageRows = table.getRowModel().rows
+      return h('input', { className: 'pi-check', type: 'checkbox', checked: pageRows.length > 0 && pageRows.every(row => selected.has(row.id)), onChange: event => setSelected(previous => { const next = new Set(previous); pageRows.forEach(row => event.target.checked ? next.add(row.id) : next.delete(row.id)); return next }), 'aria-label': t('selectAll') })
+    },
+    cell: ({ row }) => h('input', { className: 'pi-check', type: 'checkbox', checked: selected.has(row.original.id), onChange: event => toggle(row.original.id, event.target.checked), 'aria-label': `选择 ${row.original.materialName || row.original.requisitionNo}` }),
+  }
+  const candidateSection = store.pendingTotal > 0 ? h('section', { className: 'pi-card', 'aria-label': t('candidates') },
+    h(AIDataTable, {
+      definition: pendingDefinition, rows: candidates, storageScope: 'hilda:dsh-procurement-intake',
+      defaultMode: 'smart', modeLock: 'smart', showModeSwitch: false, showScopeNote: false,
+      columnSettings: { storageKey: 'hilda:dsh-procurement-intake:procurement.pending-lines:columns:v2' },
+      loading: pendingLoading,
+      onRefresh: () => refreshTable('pending'),
+      page: pendingPage, pageSize: pendingPageSize, onPageChange: page => changePage('pending', page),
+      onPageSizeChange: pageSize => changePageSize('pending', pageSize), total: store.pendingFilteredTotal,
+      onQueryChange: queryState => updateTableQuery('pending', queryState),
+      queryFieldIds: PENDING_QUERY_FIELD_IDS,
+      getRowId: row => row.id, rowSelection: pendingSelection,
+      leadingColumns: [pendingSelectColumn], emptyText: t('notFound'),
+    })) : h('div', { className: 'pi-card pi-empty' }, h('strong', null, t('noCandidates')), h('p', null, t('noCandidates')))
+
+  const mineDefinition = React.useMemo(() => defineAITable({
+    id: 'procurement.owned-lines', rowKey: row => row.id, ai: { mode: 'adapter', adapter: aiAdapter },
+    fields: [
+      { id: 'materialName', label: t('materialInfo'), type: 'text', accessor: 'materialName', width: 210 },
+      { id: 'materialCode', label: t('materialCode'), type: 'text', accessor: 'materialCode', width: 120 },
+      { id: 'materialCategory', label: t('materialCategory'), type: 'text', accessor: 'materialCategory', width: 120 },
+      { id: 'specification', label: t('spec'), type: 'text', read: row => [row.specification, row.model].filter(Boolean).join(' · '), width: 150 },
+      { id: 'requisitionNo', label: t('requisitionNo'), type: 'text', accessor: 'requisitionNo', width: 140 },
+      { id: 'lineNo', label: t('lineNo'), type: 'text', accessor: 'lineNo', width: 90 },
+      { id: 'quantity', label: t('quantity'), type: 'number', read: row => Number(row.quantity) || 0, format: (_value, row) => qty(row), width: 90 },
+      { id: 'remainingQuantity', label: t('remainingQuantity'), type: 'number', read: row => Number(row.remainingQuantity) || 0, format: (_value, row) => row.remainingQuantity ? `${row.remainingQuantity}${row.unit ? ' ' + row.unit : ''}` : '—', width: 120 },
+      { id: 'purchaseOrderNo', label: t('purchaseOrder'), type: 'text', accessor: 'purchaseOrderNo', width: 135 },
+      { id: 'supplier', label: t('supplier'), type: 'text', accessor: 'supplier', width: 120 },
+      { id: 'orderStatus', label: t('orderStatus'), type: 'tag', read: row => row.orderStatus || '', render: (_value, row) => orderStatusBadge(row), width: 130 },
+      { id: 'demandDate', label: t('expectedDate'), type: 'date', accessor: 'demandDate', width: 120 },
+      { id: 'expectedShipAt', label: t('expectedShip'), type: 'date', read: row => row.expectedShipAt || row.buyerEtaFromFile || '', width: 130 },
+      { id: 'notes', label: t('notes'), type: 'text', accessor: 'notes', width: 180 },
+      { id: 'confirmedAt', label: t('claimedAt'), type: 'datetime', read: row => formatDateTime(row.confirmedAt), width: 145 },
+    ],
+  }), [t])
+  const mineSelection = Object.fromEntries([...mineSelected].map(id => [id, true]))
+  const mineSelectColumn = {
+    id: '__select__', size: 42, enableSorting: false, enableHiding: false,
+    header: ({ table }) => {
+      const pageRows = table.getRowModel().rows
+      return h('input', { className: 'pi-check', type: 'checkbox', checked: pageRows.length > 0 && pageRows.every(row => mineSelected.has(row.id)), onChange: event => setMineSelected(previous => { const next = new Set(previous); pageRows.forEach(row => event.target.checked ? next.add(row.id) : next.delete(row.id)); return next }), 'aria-label': t('selectAll') })
+    },
+    cell: ({ row }) => h('input', { className: 'pi-check', type: 'checkbox', checked: mineSelected.has(row.original.id), onChange: event => toggleMine(row.original.id, event.target.checked), 'aria-label': `选择 ${row.original.materialName || row.original.requisitionNo}` }),
+  }
+  const mineActionColumn = {
+    id: 'actions', size: 178, enableSorting: false, enableHiding: false, meta: { sticky: 'right' },
+    header: () => '', cell: ({ row }) => h('div', { className: 'pi-row-actions' },
+      h('button', { type: 'button', className: 'pi-button pi-button--small', onClick: () => openDetails(row.original) }, t('viewDetails')),
+      h('button', { type: 'button', className: 'pi-button pi-button--small', onClick: () => deleteOwned(row.original.id) }, t('delete'))),
+  }
+  const mineSection = h('section', { className: 'pi-card' },
+    h('div', { className: 'pi-table-toolbar' },
+      h('h2', { className: 'pi-section-title' }, t('myRequests')),
+      h('span', { className: 'pi-table-total' }, t('tableTotal').replace('{count}', String(store.mineFilteredTotal)))),
+    store.mineTotal > 0 ? h(React.Fragment, null,
+      h('div', { className: 'pi-batch-bar' },
+        h('button', { type: 'button', className: 'pi-button pi-button--small pi-button--primary', style: { width: 'auto' }, disabled: !mineSelected.size, onClick: () => setShipDialogOpen(true) }, CALENDAR_ICON, `批量更新发货日期${mineSelected.size ? ` (${mineSelected.size})` : ''}`),
+        h(HildaButton, { type: 'button', variant: 'outline', size: 'sm', className: 'pi-button--small', disabled: !mineSelected.size, onClick: () => { setBatchStatusDraft(''); setStatusDialogOpen(true) } }, t('batchStatus')),
+        h('button', { type: 'button', className: 'pi-button pi-button--small', disabled: !mineSelected.size, onClick: () => { setBatchSupplierDraft(''); setSupplierDialogOpen(true) } }, t('batchSupplier')),
+        h('button', { type: 'button', className: 'pi-button pi-button--small pi-button--danger', disabled: !mineSelected.size, onClick: deleteSelected }, TRASH_ICON, `删除所选${mineSelected.size ? ` ${mineSelected.size} 条` : ''}`)),
+      h(AIDataTable, {
+        definition: mineDefinition, rows: mine, storageScope: 'hilda:dsh-procurement-intake',
+        defaultMode: 'smart', modeLock: 'smart', showModeSwitch: false, showScopeNote: false,
+        columnSettings: { storageKey: 'hilda:dsh-procurement-intake:procurement.owned-lines:columns:v2' },
+        loading: mineLoading,
+        onRefresh: () => refreshTable('mine'),
+        page: minePage, pageSize: minePageSize, onPageChange: page => changePage('mine', page),
+        onPageSizeChange: pageSize => changePageSize('mine', pageSize), total: store.mineFilteredTotal,
+        onQueryChange: queryState => updateTableQuery('mine', queryState),
+        queryFieldIds: MINE_QUERY_FIELD_IDS,
+        getRowId: row => row.id, rowSelection: mineSelection,
+        leadingColumns: [mineSelectColumn], additionalColumns: [mineActionColumn], emptyText: t('noMine'),
+      }))
+      : h('div', { className: 'pi-empty' }, h('strong', null, t('noMine')), h('p', null, '在“待筛选”中输入物料关键词，核对命中明细后再确认归属。')))
+
+  const menuTitle = { workspace: t('workspace'), requests: t('requests'), orders: t('ordersMenu'), issues: t('issues'), settings: t('modelSettings') }
+  const placeholder = h('section', { className: 'pi-card pi-empty' }, h('strong', null, menuTitle[menu]), h('p', null, t('comingSoon')))
+  const settingsSection = h('section', { className: 'pi-card' },
+    h('div', { className: 'pi-inline' }, h('h2', { className: 'pi-section-title' }, t('modelSettings'))),
+    h('p', { className: 'pi-help' }, '选择 AI 筛选 / 填色 / 字段生成使用的模型与推理强度。'),
+    h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, marginTop: 12 } },
+      h('span', { style: { minWidth: 90, color: 'var(--pc-color-text-secondary)', fontSize: 12 } }, t('modelLabel')),
+      h('select', { className: 'pi-select', value: modelSettings.model, onChange: event => setModelSettings(prev => ({ ...prev, model: event.target.value })) },
+        ...modelOptions.models.map(model => h('option', { key: model.id, value: model.id }, model.name || model.id)))),
+    h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, marginTop: 12 } },
+      h('span', { style: { minWidth: 90, color: 'var(--pc-color-text-secondary)', fontSize: 12 } }, t('reasoningEffortLabel')),
+      h('select', { className: 'pi-select', value: modelSettings.reasoningEffort, onChange: event => setModelSettings(prev => ({ ...prev, reasoningEffort: event.target.value })) },
+        ...modelOptions.reasoningEfforts.map(effort => h('option', { key: effort.id, value: effort.id }, effort.name || effort.id)))),
+    h('button', { type: 'button', className: 'pi-button pi-button--primary', style: { marginTop: 14 }, onClick: saveModelSettings }, t('saveSettings')))
+
+  const detailDialog = detailRow && detailDraft && h('div', { ref: detailDialogOverlayRef, className: 'pi-dialog-overlay', onClick: event => { if (event.target === event.currentTarget && !savingDetail) setDetailRow(null) } },
+    h('div', { className: 'pi-dialog-panel pi-detail-dialog', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('detailTitle') },
+      h('div', { className: 'pi-detail-heading' }, h('div', null, h('h3', { className: 'pi-dialog-title' }, t('detailTitle')), h('p', { className: 'pi-dialog-description' }, `${detailRow.materialName || t('material')} · ${detailRow.requisitionNo || '—'}`)),
+        h('button', { type: 'button', className: 'pi-button pi-button--small', disabled: savingDetail, onClick: () => setDetailRow(null) }, t('close'))),
+      h('section', { className: 'pi-detail-section' }, h('h4', { className: 'pi-detail-section-title' }, t('detailBasics')),
+        h('div', { className: 'pi-detail-grid' },
+          detailValue(t('requisitionNo'), detailRow.requisitionNo), detailValue(t('lineNo'), detailRow.lineNo),
+          detailValue(t('materialInfo'), detailRow.materialName), detailValue(t('materialCode'), detailRow.materialCode),
+          detailValue(t('materialCategory'), detailRow.materialCategory),
+          detailValue(t('spec'), [detailRow.specification, detailRow.model].filter(Boolean).join(' / ')), detailValue(t('quantity'), qty(detailRow)),
+          detailValue(t('remainingQuantity'), detailRow.remainingQuantity), detailValue(t('expectedDate'), detailRow.demandDate),
+          detailValue(t('purchaseOrder'), detailRow.purchaseOrderNo),
+          detailValue(t('claimedAt'), formatDateTime(detailRow.confirmedAt)), detailValue(t('sourceFile'), detailRow.sourceFileName),
+          detailValue(t('importedAt'), formatDateTime(detailRow.importedAt)))),
+      h('section', { className: 'pi-detail-section' }, h('h4', { className: 'pi-detail-section-title' }, t('followupSection')),
+        h('div', { className: 'pi-detail-form' },
+          h('label', { className: 'pi-detail-field' }, h('span', null, t('supplier')), h('input', { className: 'pi-input pi-detail-input', type: 'text', value: detailDraft.supplier, disabled: savingDetail, placeholder: t('supplierPlaceholder'), onChange: event => setDetailDraft(current => ({ ...current, supplier: event.target.value })) })),
+          h('label', { className: 'pi-detail-field' }, h('span', null, t('orderStatus')), h(HildaSelect, { value: detailDraft.orderStatus || '__clear__', disabled: savingDetail, onValueChange: value => setDetailDraft(current => ({ ...current, orderStatus: value === '__clear__' ? '' : value || '' })) },
+            h(HildaSelectTrigger, { className: 'pi-status-select', 'aria-label': t('orderStatus') }, h(HildaSelectValue)),
+            h(HildaSelectContent, { portalContainer: detailDialogOverlayRef }, h(HildaSelectItem, { value: '__clear__' }, t('notRecorded')), ...ORDER_STATUS_OPTIONS.map(status => h(HildaSelectItem, { key: status, value: status }, status))))),
+          h('label', { className: 'pi-detail-field' }, h('span', null, t('expectedShip')), h('input', { className: 'pi-input pi-detail-input', type: 'text', value: detailDraft.expectedShipAt, disabled: savingDetail, placeholder: 'YYYY-MM-DD / 10月10日左右', onChange: event => setDetailDraft(current => ({ ...current, expectedShipAt: event.target.value })) })),
+          h('label', { className: 'pi-detail-field' }, h('span', null, t('nextAction')), h('textarea', { className: 'pi-detail-textarea', rows: 2, value: detailDraft.nextAction, disabled: savingDetail, onChange: event => setDetailDraft(current => ({ ...current, nextAction: event.target.value })) })),
+          h('label', { className: 'pi-detail-field' }, h('span', null, t('waitingOn')), h('textarea', { className: 'pi-detail-textarea', rows: 2, value: detailDraft.waitingOn, disabled: savingDetail, onChange: event => setDetailDraft(current => ({ ...current, waitingOn: event.target.value })) })),
+          h('label', { className: 'pi-detail-field pi-detail-field--wide' }, h('span', null, t('notes')), h('textarea', { className: 'pi-detail-textarea', rows: 3, value: detailDraft.notes, disabled: savingDetail, onChange: event => setDetailDraft(current => ({ ...current, notes: event.target.value })) }))),
+        h('div', { className: 'pi-dialog-actions' },
+          h('button', { type: 'button', className: 'pi-button pi-button--small', disabled: savingDetail, onClick: () => setDetailRow(null) }, t('close')),
+          h('button', { type: 'button', className: 'pi-button pi-button--small pi-button--primary', style: { width: 'auto' }, disabled: savingDetail, onClick: saveDetails }, savingDetail ? t('saving') : t('saveDetail')))),
+      detailRow.activityLog?.length ? h('section', { className: 'pi-detail-section' }, h('h4', { className: 'pi-detail-section-title' }, t('activityHistory')),
+        h('div', { className: 'pi-detail-history' }, ...[...detailRow.activityLog].slice(-8).reverse().map(item => h('article', { className: 'pi-detail-history-item', key: item.id }, h('strong', null, item.action), h('span', null, formatDateTime(item.createdAt)), h('p', null, item.detail))))) : null));
+  const shipDialog = shipDialogOpen && h('div', { className: 'pi-dialog-overlay', onClick: event => { if (event.target === event.currentTarget) setShipDialogOpen(false) } },
+    h('div', { className: 'pi-dialog-panel', role: 'dialog', 'aria-modal': 'true', 'aria-label': '批量更新发货日期' },
+      h('h3', { className: 'pi-dialog-title' }, '批量更新发货日期'),
+      h('p', { className: 'pi-dialog-description' }, `为已选择的 ${mineSelected.size} 条采购明细设置预计发货日期。`),
+      h('label', { className: 'pi-batch-date-label' }, t('expectedShip'), h(DatePicker, { value: shipDate, onValueChange: setShipDate, 'aria-label': t('expectedShip') })),
+      h('div', { className: 'pi-dialog-actions' },
+        h('button', { type: 'button', className: 'pi-button pi-button--small', onClick: () => setShipDialogOpen(false) }, '取消'),
+        h('button', { type: 'button', className: 'pi-button pi-button--small pi-button--primary', style: { width: 'auto' }, disabled: !shipDate, onClick: applyShipToSelected }, '确认更新'))))
+
+  const statusDialog = statusDialogOpen && h('div', { ref: statusDialogOverlayRef, className: 'pi-dialog-overlay', onPointerDown: event => { if (event.target === event.currentTarget && !savingBatchStatus) setStatusDialogOpen(false) } },
+    h('div', { className: 'pi-dialog-panel', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('batchStatus') },
+      h('h3', { className: 'pi-dialog-title' }, t('batchStatus')),
+      h('p', { className: 'pi-dialog-description' }, t('batchStatusConfirm').replace('{count}', String(mineSelected.size))),
+      h('label', { className: 'pi-detail-field', style: { marginTop: 16 } }, h('span', null, t('chooseStatus')),
+        h(HildaSelect, { value: batchStatusDraft || undefined, disabled: savingBatchStatus, onValueChange: value => setBatchStatusDraft(value || '') },
+          h(HildaSelectTrigger, { className: 'pi-status-select', 'aria-label': t('chooseStatus') }, h(HildaSelectValue, { placeholder: t('chooseStatus') })),
+          h(HildaSelectContent, { portalContainer: statusDialogOverlayRef }, h(HildaSelectItem, { value: '__clear__' }, t('notRecorded')), ...ORDER_STATUS_OPTIONS.map(status => h(HildaSelectItem, { key: status, value: status }, status))))),
+      h('div', { className: 'pi-dialog-actions' },
+        h(HildaButton, { variant: 'outline', size: 'sm', disabled: savingBatchStatus, onClick: () => setStatusDialogOpen(false) }, t('close')),
+        h(HildaButton, { variant: 'primary', size: 'sm', disabled: !batchStatusDraft || savingBatchStatus, onClick: applyStatusToSelected }, savingBatchStatus ? t('saving') : t('batchStatus')))));
+
+  const supplierDialog = supplierDialogOpen && h('div', { className: 'pi-dialog-overlay', onClick: event => { if (event.target === event.currentTarget && !savingBatchSupplier) setSupplierDialogOpen(false) } },
+    h('div', { className: 'pi-dialog-panel', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('batchSupplier') },
+      h('h3', { className: 'pi-dialog-title' }, t('batchSupplier')),
+      h('p', { className: 'pi-dialog-description' }, t('batchSupplierConfirm').replace('{count}', String(mineSelected.size))),
+      h('label', { className: 'pi-detail-field', style: { marginTop: 16 } }, h('span', null, t('supplier')),
+        h('input', { className: 'pi-input', type: 'text', value: batchSupplierDraft, autoFocus: true, placeholder: t('supplierPlaceholder'), onChange: event => setBatchSupplierDraft(event.target.value) })),
+      h('div', { className: 'pi-dialog-actions' },
+        h('button', { type: 'button', className: 'pi-button pi-button--small', disabled: savingBatchSupplier, onClick: () => setSupplierDialogOpen(false) }, t('close')),
+        h('button', { type: 'button', className: 'pi-button pi-button--small pi-button--primary', style: { width: 'auto' }, disabled: !batchSupplierDraft.trim() || savingBatchSupplier, onClick: applySupplierToSelected }, savingBatchSupplier ? t('saving') : t('batchSupplier')))));
+
+  return h('main', { className: 'pc-intake' }, h('style', null, css + hildaUiCSS + aiTableCSS + '.pi-batch-bar .cn-button.pi-button--small{min-height:28px;padding:3px 10px;font-size:12px}.pc-intake .pi-spinner{width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:pi-intake-spin .75s linear infinite;flex:none}@keyframes pi-intake-spin{to{transform:rotate(360deg)}}'), h('div', { className: 'pi-stack' },
+    h('header', null, h('p', { className: 'pi-eyebrow' }, t('category')), h('h1', { className: 'pi-title' }, t('title')), h('p', { className: 'pi-subtitle' }, t('subtitle'))),
+    h('nav', { className: 'pi-menu', 'aria-label': t('category') }, ...[['workspace', t('workspace')], ['requests', `${t('requests')} · ${store.pendingTotal + store.mineTotal}`], ['orders', t('ordersMenu')], ['issues', t('issues')], ['settings', t('modelSettings')]].map(([key, label]) => h('button', { key, type: 'button', className: 'pi-menu-item', onClick: () => setMenu(key), 'aria-current': menu === key ? 'page' : undefined }, label))),
+    h(HildaToast, { open: Boolean(success), onOpenChange: open => { if (!open) setSuccess('') }, title: success, duration: 4000 }), error && h('p', { className: 'pi-error', role: 'alert' }, error),
+    menu === 'requests' && h('nav', { className: 'pi-tabs', 'aria-label': t('requests') }, ...[['intake', `${t('pendingTab')} · ${store.pendingTotal}`], ['mine', `${t('mineTab')} · ${store.mineTotal}`]].map(([key, label]) => h('button', { key, type: 'button', className: 'pi-tab', onClick: () => setRequestView(key), 'aria-pressed': requestView === key }, label))),
+    ...(menu === 'requests'
+      ? (requestView === 'intake' ? [uploadSection, previewSection, searchSection, batchSection, candidateSection] : [mineSection])
+      : menu === 'settings' ? [settingsSection] : [placeholder]),
+    h('p', { className: 'pi-ask-ai' }, t('askAi')),
+    h('p', { className: 'pi-footer' }, t('localStorageNote'))), shipDialog, detailDialog, statusDialog, supplierDialog)
+}
+
+function createAiAdapter(data, sessionId) {
+  const metadata = (fields) => fields.map(({ fieldId, label, type, options }) => ({ fieldId, label, type, options: options ?? [] }))
+  return {
+    async generateFilters({ instruction, fields }) {
+      const allowed = fields.filter((field) => field.aiReadable && field.filterable)
+      return data.aiGenerate('filters', { instruction, fields: metadata(allowed) }, sessionId)
+    },
+    async generateColorRules({ instruction, fields }) {
+      const allowed = fields.filter((field) => field.aiReadable && field.colorable)
+      return data.aiGenerate('colors', { instruction, fields: metadata(allowed) }, sessionId)
+    },
+    async previewAIField({ definition, rows, rowKey, fields }) {
+      const allowed = definition.referencedFieldIds.map((id) => {
+        const field = fields.find((item) => item.fieldId === id && item.aiReadable)
+        if (!field) throw new Error(`AI reference must be readable: ${id}`)
+        return field
+      })
+      return data.aiGenerate('field-preview', {
+        definition,
+        fields: metadata(allowed),
+        rows: rows.map((row) => ({ rowKey: rowKey(row), values: Object.fromEntries(allowed.map((field) => [field.fieldId, field.getValue(row)])) })),
+      }, sessionId)
+    },
+  }
+}
+
+function dataAccess(ctx) {
+  const proc = () => ctx.get('remote.procurement')
+  const unwrap = async (promise) => {
+    const result = await promise
+    if (!result.ok) {
+      const error = result.error
+      const message = error instanceof Error ? error.message : (typeof error === 'string' ? error : (error && error.message) ? error.message : String(error))
+      console.error('[procurement] remote error:', error)
+      throw new Error(message || '操作失败')
+    }
+    return result.value
+  }
+  return {
+    list: (status, page, pageSize, sort, filters, keywords) => unwrap(proc().list({ status, page, pageSize, sort, filters, keywords })),
+    claim: (ids) => unwrap(proc().claim({ ids })),
+    importLines: (lines, fileName, sheetName) => unwrap(proc().importLines({ lines, fileName, sheetName })),
+    clearPending: () => unwrap(proc().clearPending({})),
+    deleteOwned: (ids) => unwrap(proc().deleteOwned({ ids })),
+    updateLine: (id, updates) => unwrap(proc().updateLine({ id, ...updates })),
+    updateSuppliers: (ids, supplier) => unwrap(proc().updateSuppliers({ ids, supplier })),
+    aiGenerate: (operation, payload, sessionId) => unwrap(proc().aiGenerate({ operation, payload, sessionId })),
+    listModelOptions: () => unwrap(proc().listModelOptions({})),
+    getModelSettings: () => unwrap(proc().getModelSettings({})),
+    updateModelSettings: (model, reasoningEffort) => unwrap(proc().updateModelSettings({ model, reasoningEffort })),
+  }
+}
+
+module.exports = {
+  inject: ['slots', 'sidebarRightTabs', 'locale', 'remote'],
+  async apply(ctx) {
+    const t = ctx.locale.bind(namespace)
+    ctx.effect(() => ctx.locale.register(namespace, { zh, en }), 'procurement-intake: dictionaries')
+    const disposeRemote = await ctx.remote.$mount(TYPERT_REMOTE)
+    ctx.effect(() => disposeRemote, 'procurement-intake: remote')
+    ctx.effect(() => ctx.sidebarRightTabs.register({ id: '@hilda-biz/dsh-procurement-intake', kind: 'procurement-intake', priority: 'extension', title: () => t('title'), guide: [{ id: 'intake', order: 30, title: () => t('title'), description: () => t('subtitle') }] }), 'procurement-intake: tab type')
+    const data = dataAccess(ctx)
+    ctx.effect(() => ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({ name: 'sidebar.right.pane.tab', key: '@hilda-biz/dsh-procurement-intake', locale: namespace }, (props) => h(IntakeBody, { ...props, data }))), 'procurement-intake: tab body')
+  },
+}

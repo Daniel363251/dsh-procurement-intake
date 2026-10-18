@@ -1,0 +1,3 @@
+- insert:
+    - id: procurement-intake
+      name: '@hilda-biz/dsh-procurement-intake'
