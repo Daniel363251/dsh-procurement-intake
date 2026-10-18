@@ -1,0 +1,7 @@
+const ORDER_QUERY_FIELD_IDS = ['orderNo', 'purchaseOrderStatus', 'orderDate', 'buyer', 'supplier', 'itemNames', 'itemCount', 'itemQuantity', 'inventoryOrg', 'requisitionType', 'preparer', 'requisitionNos', 'procurementOrg', 'procurementOfficer', 'procurementDepartment', 'project', 'materialCategory', 'expectedArrivalDate', 'arrivalDate', 'receivedQuantity', 'returnedQuantity', 'remainingQuantity', 'stockInDate', 'stockInQuantity', 'returnedStockQuantity', 'replenishmentQuantity', 'unexecutedCloseQuantity', 'requisitionLineClosed', 'sourceDocumentNo', 'sourceDocumentLineNo', 'lineRemark', 'requisitionQuantity', 'orderedQuantity', 'demandDate', 'suggestedOrderDate', 'customer', 'taxInclusiveTotal', 'taxExclusiveTotal', 'taxRate', 'deliveryAddress', 'recipient', 'recipientPhone', 'deliveryTime', 'paymentTerms', 'sourceFileName', 'importedAt']
+const ORDER_COLUMN_SETTINGS_KEY = 'hilda:dsh-procurement-intake:procurement.purchase-orders:columns:v1'
+const ORDER_REPORT_VISIBLE_COLUMNS = ['requisitionNos', 'procurementOrg', 'inventoryOrg', 'expectedArrivalDate', 'arrivalDate', 'receivedQuantity', 'remainingQuantity', 'procurementOfficer', 'procurementDepartment']
+const ORDER_REPORT_HIDDEN_LEGACY_COLUMNS = ['buyer', 'itemCount', 'taxInclusiveTotal', 'taxExclusiveTotal', 'taxRate', 'recipient', 'recipientPhone', 'deliveryTime', 'paymentTerms']
+
+
+module.exports = { ORDER_QUERY_FIELD_IDS, ORDER_COLUMN_SETTINGS_KEY, ORDER_REPORT_VISIBLE_COLUMNS, ORDER_REPORT_HIDDEN_LEGACY_COLUMNS }

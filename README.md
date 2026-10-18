@@ -17,17 +17,42 @@
 
 ```
 plugins/dsh-procurement-intake/
-├── index.js                 # 宿主侧：ProcurementService、存储域、Agent 工具、AI 生成
-├── client.source.cjs        # 客户端源码（面板 UI、数据访问、AI adapter）
-├── client.js                # 客户端构建产物（esbuild 打包，运行时自包含）
-├── build-client.mjs         # 客户端构建脚本
-├── remote-def.js            # Typert 远程协议定义（procurement/* 方法）
-├── typert.host.js           # 宿主 Typert manifest
-├── typert.remote-client.js  # 客户端 Typert remote 信息
-├── vendor/ai-table/         # 内置的 @enterprise/ai-table 构建产物
-├── vendor/hilda-ui/         # 插件所需的 Hilda Button / Toast / Select 源码与样式
+├── index.js                              # 稳定宿主入口，转发到 src/host
+├── src/
+│   ├── host/                              # Harness 宿主能力与业务服务
+│   │   ├── index.js
+│   │   ├── schemas.js
+│   │   ├── list-query.js
+│   │   ├── ai-generation.js
+│   │   ├── procurement-domain-service.js  # 采购领域规则与存储操作
+│   │   ├── procurement-service.js         # Typert / Agent 对外适配
+│   │   └── imports/parse-nc-workbook.js
+│   └── client/                            # 浏览器侧面板
+│       ├── index.cjs                      # Harness 客户端注册入口
+│       ├── app/                            # 面板组合与路由
+│       ├── features/                      # 按采购业务功能组织的视图和状态
+│       │   ├── imports/
+│       │   ├── master-data/
+│       │   ├── orders/
+│       │   ├── requisitions/
+│       │   ├── settings/
+│       │   └── workspace/
+│       ├── components/                    # 跨功能展示组件
+│       ├── hooks/                          # 通用交互 hooks
+│       ├── imports/                        # 浏览器 Excel 解析
+│       ├── lib/                             # AI 与数据访问适配
+│       ├── locales.cjs
+│       └── styles.cjs
+├── client.source.cjs                      # 稳定客户端构建入口（转发到 src/client）
+├── client.js                              # 客户端构建产物（Harness 加载）
+├── build-client.mjs                       # 客户端构建脚本
+├── remote-def.js                          # Typert 远程协议定义
+├── typert.host.js                         # 宿主 Typert manifest
+├── typert.remote-client.js                # 客户端 Typert remote 信息
+├── vendor/ai-table/                       # 内置的 @enterprise/ai-table 构建产物
+├── vendor/hilda-ui/                       # 插件使用的 Hilda UI 组件与样式
 ├── package.json
-└── cordis.patch.yml         # bundle patch
+└── cordis.patch.yml                        # bundle patch
 ```
 
 ## 架构
@@ -46,7 +71,9 @@ Typert 远程协议（/api/procurement/*）
 ```
 
 - 面板与 Agent 走**同一套宿主服务层**，读写同一份数据。
-- 客户端 `client.js` 由 `client.source.cjs` 经 esbuild 打包，`external` 仅保留 `react` / `react-dom`（由 Harness 提供）；AI 表格和 Hilda UI 组件源码随插件目录提供，构建不读取主项目的 `packages/` 或 `ai-table-plugin/`。
+- 宿主入口 `index.js` 只转发到 `src/host/index.js`；协议适配、采购领域逻辑、查询规则、数据 schema、导入解析和 AI 生成分别维护。
+- 客户端 `client.js` 由 `client.source.cjs` 经 esbuild 打包；稳定入口转发到 `src/client/index.cjs`。面板组合、功能视图/状态、共享组件、通用 hooks、数据访问和样式分别维护。
+- `client.js` 是生成产物，修改客户端时应编辑 `src/client/` 源码并运行 `npm run build`。`external` 仅保留 `react` / `react-dom`（由 Harness 提供）；AI 表格和 Hilda UI 组件源码随插件目录提供，构建不读取主项目的 `packages/` 或 `ai-table-plugin/`。
 
 ## 数据模型
 
@@ -155,7 +182,7 @@ Typert 远程协议（/api/procurement/*）
 ```sh
 cd plugins/dsh-procurement-intake
 npm install
-npm run build          # esbuild 打包 client.source.cjs → client.js
+npm run build          # esbuild 打包 client.source.cjs 及 src/client/ → client.js
 ```
 
 然后用 Harness 的插件管理器把该目录作为 bundle 安装（`plugin_manager install_bundle` 指向本目录，等价于将 `@hilda-biz/dsh-procurement-intake` 链接进当前 profile）。安装后刷新页面即可；修改宿主侧（`index.js` / `remote-def.js`）或客户端后需重新 `remove_bundle` + `install_bundle`（或重启 Harness）并刷新页面。
