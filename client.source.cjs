@@ -2,7 +2,6 @@ const React = require('react')
 const XLSX = require('@e965/xlsx')
 const { TYPERT_REMOTE } = require('./typert.remote-client.js')
 const { Button: HildaButton } = require('./vendor/hilda-ui/components/Button.tsx')
-const { Toast: HildaToast } = require('./vendor/hilda-ui/components/Toast.tsx')
 const { Select: HildaSelect, SelectTrigger: HildaSelectTrigger, SelectValue: HildaSelectValue, SelectContent: HildaSelectContent, SelectItem: HildaSelectItem } = require('./vendor/hilda-ui/components/Select.tsx')
 const { DayPicker } = require('react-day-picker')
 const { format } = require('date-fns')
@@ -642,6 +641,11 @@ function IntakeBody({ t, data, sessionId }) {
   const [selected, setSelected] = React.useState(new Set())
   const [error, setError] = React.useState('')
   const [success, setSuccess] = React.useState('')
+  React.useEffect(() => {
+    if (!success) return
+    const timer = window.setTimeout(() => setSuccess(''), 4000)
+    return () => window.clearTimeout(timer)
+  }, [success])
   const [parsing, setParsing] = React.useState(false)
   const [importing, setImporting] = React.useState(false)
   const [dragActive, setDragActive] = React.useState(false)
@@ -1108,7 +1112,11 @@ function IntakeBody({ t, data, sessionId }) {
   return h('main', { className: 'pc-intake' }, h('style', null, css + hildaUiCSS + aiTableCSS + '.pi-batch-bar .cn-button.pi-button--small{min-height:28px;padding:3px 10px;font-size:12px}.pc-intake .pi-spinner{width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:pi-intake-spin .75s linear infinite;flex:none}@keyframes pi-intake-spin{to{transform:rotate(360deg)}}'), h('div', { className: 'pi-stack' },
     h('header', null, h('p', { className: 'pi-eyebrow' }, t('category')), h('h1', { className: 'pi-title' }, t('title')), h('p', { className: 'pi-subtitle' }, t('subtitle'))),
     h('nav', { className: 'pi-menu', 'aria-label': t('category') }, ...[['workspace', t('workspace')], ['requests', `${t('requests')} · ${store.pendingTotal + store.mineTotal}`], ['orders', t('ordersMenu')], ['issues', t('issues')], ['settings', t('modelSettings')]].map(([key, label]) => h('button', { key, type: 'button', className: 'pi-menu-item', onClick: () => setMenu(key), 'aria-current': menu === key ? 'page' : undefined }, label))),
-    h(HildaToast, { open: Boolean(success), onOpenChange: open => { if (!open) setSuccess('') }, title: success, duration: 4000 }), error && h('p', { className: 'pi-error', role: 'alert' }, error),
+    success && h('div', { className: 'cn-toast', role: 'status', 'aria-live': 'polite' },
+      h('span', { className: 'cn-toast-mark', 'aria-hidden': true }, '✓'),
+      h('div', { className: 'cn-toast-copy' }, h('strong', null, success)),
+      h('button', { type: 'button', className: 'cn-button cn-button-variant-ghost cn-button-size-icon', 'aria-label': t('close'), onClick: () => setSuccess('') }, '×')),
+    error && h('p', { className: 'pi-error', role: 'alert' }, error),
     menu === 'requests' && h('nav', { className: 'pi-tabs', 'aria-label': t('requests') }, ...[['intake', `${t('pendingTab')} · ${store.pendingTotal}`], ['mine', `${t('mineTab')} · ${store.mineTotal}`]].map(([key, label]) => h('button', { key, type: 'button', className: 'pi-tab', onClick: () => setRequestView(key), 'aria-pressed': requestView === key }, label))),
     ...(menu === 'requests'
       ? (requestView === 'intake' ? [uploadSection, previewSection, searchSection, batchSection, candidateSection] : [mineSection])
