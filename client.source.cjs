@@ -14,6 +14,9 @@ const { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } = requir
 const h = React.createElement
 const EMPTY_STATE_IMAGE = __EMPTY_STATE_IMAGE__
 const PLUGIN_ICON = __PLUGIN_ICON__
+function PluginGuideIcon({ size = 24, className }) {
+  return h('img', { src: PLUGIN_ICON, alt: '', width: size, height: size, className, style: { objectFit: 'contain', borderRadius: 4 } })
+}
 function emptyStateContent(title, description, { compact = false, action = null } = {}) {
   return h('div', { className: `pi-empty-state-content${compact ? ' is-compact' : ''}` },
     h('img', { className: 'pi-empty-state-illustration', src: EMPTY_STATE_IMAGE, alt: '' }),
@@ -2262,7 +2265,7 @@ module.exports = {
     ctx.effect(() => ctx.locale.register(namespace, { zh, en }), 'procurement-intake: dictionaries')
     const disposeRemote = await ctx.remote.$mount(TYPERT_REMOTE)
     ctx.effect(() => disposeRemote, 'procurement-intake: remote')
-    ctx.effect(() => ctx.sidebarRightTabs.register({ id: '@hilda-biz/dsh-procurement-intake', kind: 'procurement-intake', priority: 'extension', title: () => t('title'), guide: [{ id: 'intake', order: 30, title: () => t('title'), description: () => t('subtitle'), icon: h('img', { src: PLUGIN_ICON, alt: '', style: { width: 24, height: 24, objectFit: 'contain', borderRadius: 4 } }) }] }), 'procurement-intake: tab type')
+    ctx.effect(() => ctx.sidebarRightTabs.register({ id: '@hilda-biz/dsh-procurement-intake', kind: 'procurement-intake', priority: 'extension', title: () => t('title'), guide: [{ id: 'intake', order: 30, title: () => t('title'), description: () => t('subtitle'), icon: PluginGuideIcon }] }), 'procurement-intake: tab type')
     const data = dataAccess(ctx)
     ctx.effect(() => ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({ name: 'sidebar.right.pane.tab', key: '@hilda-biz/dsh-procurement-intake', locale: namespace }, (props) => h(IntakeErrorBoundary, null, h(IntakeBody, { ...props, data })))), 'procurement-intake: tab body')
   },
