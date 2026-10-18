@@ -1015,7 +1015,7 @@ function IntakeBody({ t, data, sessionId }) {
     setMasterDataLoading(true)
     try {
       const result = await data.listMasterData(masterDataType)
-      setMasterDataRows(result.rows || [])
+      setMasterDataRows((result.rows || []).filter(row => String(row?.name ?? '').trim()))
       setMasterDataSelected(new Set())
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : String(caught))
@@ -1027,7 +1027,7 @@ function IntakeBody({ t, data, sessionId }) {
     setMasterDataOverviewLoading(true)
     try {
       const lists = await Promise.all(['suppliers', 'materials', 'materialCategories'].map(type => data.listMasterData(type)))
-      setMasterDataOverviewCount(lists.reduce((count, result) => count + (result.rows || []).length, 0))
+      setMasterDataOverviewCount(lists.reduce((count, result) => count + (result.rows || []).filter(row => String(row?.name ?? '').trim()).length, 0))
     } catch (caught) {
       setMasterDataOverviewCount(-1)
       setError(caught instanceof Error ? caught.message : String(caught))
@@ -1842,7 +1842,8 @@ function IntakeBody({ t, data, sessionId }) {
           definition: masterDataDefinition, rows: masterDataRows, storageScope: 'hilda:dsh-procurement-intake',
           fillWidth: true,
           defaultMode: 'smart', modeLock: 'smart', showModeSwitch: false, showScopeNote: false,
-          columnSettings: { storageKey: `hilda:dsh-procurement-intake:master-data:${masterDataType}` },
+          key: `master-data-${masterDataType}`,
+          columnSettings: { storageKey: `hilda:dsh-procurement-intake:master-data:v2:${masterDataType}` },
           loading: masterDataLoading, onRefresh: refreshMasterData, getRowId: row => row.id,
           rowSelection: masterDataSelection,
           onRowSelectionChange: selection => setMasterDataSelected(new Set(Object.keys(selection).filter(id => selection[id]))),
