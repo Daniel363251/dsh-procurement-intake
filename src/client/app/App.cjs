@@ -201,7 +201,7 @@ function IntakeBody({ t, data, sessionId }) {
     pendingPageSize, refreshTable, tableRefreshButton, changePage, changePageSize, updateTableQuery,
     PENDING_QUERY_FIELD_IDS, emptyStateContent, mine, mineSelected, setMineSelected, toggleMine,
     MINE_COLUMN_SETTINGS_KEY, MINE_QUERY_FIELD_IDS, setBatchSupplierDraft, setSupplierDialogOpen,
-    deleteSelected, mineLoading, minePage, minePageSize, copyCell, qty, formatDateTime,
+    setShipDialogOpen, deleteSelected, deleteOwned, openDetails, mineLoading, minePage, minePageSize, copyCell, qty, formatDateTime,
   })
 
   const placeholder = h('section', { className: 'pi-card pi-empty' }, emptyStateContent(getRouteTitle(menu, t), t('comingSoon')))
@@ -250,7 +250,7 @@ function IntakeBody({ t, data, sessionId }) {
   const orderDetailDialog = renderOrderDetailDialog({
     t, orderDetailRow, orderDetailDraft, editingOrderDetails, savingOrderDetails, setOrderDetailRow,
     setOrderDetailDraft, setEditingOrderDetails, saveOrderDetails, selectPortalRef, detailValue,
-    formatDateTime, copyCell, uniqueOrderItemValues,
+    formatDateTime, copyCell, uniqueOrderItemValues, orderDraftFrom,
   })
   return h('main', { ref: selectPortalRef, className: 'pc-intake' }, h('style', null, css + hildaUiCSS + aiTableCSS + copyCellCSS + masterDataCSS + hoverTooltipCSS + workspaceCSS + tableStickyCSS + interactionFixCSS + orderLayoutCSS), h('div', { className: 'pi-stack' },
     h('nav', { className: 'pi-menu', 'aria-label': t('category') }, ...[

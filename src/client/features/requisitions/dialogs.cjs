@@ -1,4 +1,5 @@
 const React = require('react')
+const { DatePicker } = require('../../components/presentation.cjs')
 const h = React.createElement
 
 function renderRequisitionDialogs({

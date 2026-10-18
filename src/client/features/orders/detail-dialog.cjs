@@ -11,7 +11,7 @@ const h = React.createElement
 function renderOrderDetailDialog({
   t, orderDetailRow, orderDetailDraft, editingOrderDetails, savingOrderDetails,
   setOrderDetailRow, setOrderDetailDraft, setEditingOrderDetails, saveOrderDetails,
-  selectPortalRef, detailValue, formatDateTime, copyCell, uniqueOrderItemValues,
+  selectPortalRef, detailValue, formatDateTime, copyCell, uniqueOrderItemValues, orderDraftFrom,
 }) {
   const orderTermGroups = orderDetailRow ? (() => {
     const clauses = Array.isArray(orderDetailRow.clauses) ? orderDetailRow.clauses : []

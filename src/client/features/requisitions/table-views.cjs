@@ -1,15 +1,15 @@
 const React = require('react')
 const { AIDataTable, defineAITable } = require('@enterprise/ai-table')
-const { CALENDAR_ICON, TRASH_ICON } = require('../../components/presentation.cjs')
+const { CALENDAR_ICON, TRASH_ICON, orderStatusBadge } = require('../../components/presentation.cjs')
 const h = React.createElement
 const { renderRowActionMenu } = require('../../components/row-action-menu.cjs')
 
 function useRequisitionTableViews({
   t, aiAdapter, pending, query, words, store, selected, setSelected, toggle, candidates,
   pendingLoading, pendingPage, pendingPageSize, refreshTable, tableRefreshButton, changePage,
-  changePageSize, updateTableQuery, PENDING_QUERY_FIELD_IDS, emptyStateContent,
+  changePageSize, updateTableQuery, PENDING_QUERY_FIELD_IDS, emptyStateContent, openDetails, deleteOwned,
   mine, mineSelected, setMineSelected, toggleMine, MINE_COLUMN_SETTINGS_KEY, MINE_QUERY_FIELD_IDS,
-  setBatchSupplierDraft, setSupplierDialogOpen, deleteSelected, mineLoading, minePage,
+  setBatchSupplierDraft, setSupplierDialogOpen, setShipDialogOpen, deleteSelected, mineLoading, minePage,
   minePageSize, copyCell, qty, formatDateTime,
 }) {
   const pendingDefinition = React.useMemo(() => defineAITable({

@@ -44,7 +44,8 @@
     }
   },
   "scripts": {
-    "build": "node build-client.mjs"
+    "build": "npm run lint && node build-client.mjs",
+    "lint": "eslint \"src/**/*.{js,cjs}\""
   },
   "dependencies": {
     "@e965/xlsx": "^0.20.3",
@@ -70,6 +71,8 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "esbuild": "^0.25.0",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0",
     "i18next": "26.3.6",
     "lucide-react": "1.22.0",
     "radix-ui": "1.6.0",
