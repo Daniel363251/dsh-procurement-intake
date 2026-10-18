@@ -4,12 +4,15 @@
   "private": true,
   "type": "module",
   "license": "MIT",
+  "icon": "./assets/plugin-icon.png",
   "engines": {
     "dsh": ">=0.2.1-rc.1 <0.3.0"
   },
   "description": "DeepSeek Harness extension for importing procurement requisitions and purchase orders.",
   "exports": {
     ".": "./index.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
     "./client": "./client.js",
     "./cordis.patch.yml": "./cordis.patch.yml",
     "./typert": "./typert.host.js",
@@ -22,6 +25,7 @@
     "remote-def.js",
     "typert.host.js",
     "typert.remote-client.js",
+    "locale/",
     "assets/",
     "vendor/"
   ],
