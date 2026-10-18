@@ -2,7 +2,6 @@ import { z } from 'zod'
 import { defineDomain, domainTable } from '@deepseek-ai/dsh-storage-domain'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import { TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
-import { TYPERT } from './typert.host.js'
 import * as XLSX from '@e965/xlsx'
 
 // ---------------------------------------------------------------------------
@@ -24,6 +23,7 @@ const requisitionLineSchema = z.object({
   identityKey: z.string(),
   sourceRowNumber: z.number(),
   requisitionNo: z.string(),
+  procurementOrg: z.string().default(''),
   lineNo: z.string(),
   materialCode: z.string(),
   materialName: z.string(),
@@ -54,6 +54,40 @@ const requisitionLineSchema = z.object({
   activityLog: z.array(activitySchema),
 })
 
+const purchaseOrderItemSchema = z.object({
+  sequence: z.string().default(''), name: z.string().default(''), specification: z.string().default(''),
+  quantity: z.number().nullable().default(null), unit: z.string().default(''),
+  taxInclusiveUnitPrice: z.number().nullable().default(null), taxExclusiveUnitPrice: z.number().nullable().default(null),
+  amount: z.number().nullable().default(null),
+  requisitionNo: z.string().default(''), lineNo: z.string().default(''), materialCode: z.string().default(''),
+  materialCategory: z.string().default(''), inventoryOrg: z.string().default(''), requisitionType: z.string().default(''),
+  preparer: z.string().default(''), procurementOrg: z.string().default(''), lineRemark: z.string().default(''),
+  sourceDocumentNo: z.string().default(''), sourceDocumentLineNo: z.string().default(''),
+  requisitionQuantity: z.number().nullable().default(null), orderedQuantity: z.number().nullable().default(null),
+  demandDate: z.string().default(''), suggestedOrderDate: z.string().default(''),
+  expectedArrivalDate: z.string().default(''), arrivalDate: z.string().default(''),
+  receivedQuantity: z.number().nullable().default(null), returnedQuantity: z.number().nullable().default(null),
+  remainingQuantity: z.number().nullable().default(null), stockInDate: z.string().default(''),
+  customer: z.string().default(''), stockInQuantity: z.number().nullable().default(null),
+  returnedStockQuantity: z.number().nullable().default(null), replenishmentQuantity: z.number().nullable().default(null),
+  unexecutedCloseQuantity: z.number().nullable().default(null), requisitionLineClosed: z.string().default(''),
+  procurementOfficer: z.string().default(''), procurementDepartment: z.string().default(''), project: z.string().default(''),
+  deliveryAddress: z.string().default(''),
+})
+const purchaseOrderClauseSchema = z.object({ section: z.string(), text: z.string() })
+const purchaseOrderSchema = z.object({
+  id: z.string(), orderNo: z.string(), orderDate: z.string().default(''), buyer: z.string().default(''), supplier: z.string().default(''),
+  purchaseOrderStatus: z.enum(['待通知供应商', '已通知供应商', '取消了采购订单']).default('待通知供应商'),
+  inventoryOrg: z.string().default(''), requisitionType: z.string().default(''), preparer: z.string().default(''),
+  requisitionNos: z.array(z.string()).default([]), procurementOrg: z.string().default(''),
+  procurementOfficer: z.string().default(''), procurementDepartment: z.string().default(''), project: z.string().default(''),
+  taxInclusiveTotal: z.number().nullable().default(null), taxExclusiveTotal: z.number().nullable().default(null), taxRate: z.string().default(''),
+  items: z.array(purchaseOrderItemSchema).default([]), deliveryAddress: z.string().default(''), recipient: z.string().default(''),
+  recipientPhone: z.string().default(''), deliveryTime: z.string().default(''), paymentTerms: z.array(z.string()).default([]),
+  otherTerms: z.array(z.string()).default([]), clauses: z.array(purchaseOrderClauseSchema).default([]),
+  sourceFileName: z.string().default(''), importedAt: z.string(),
+})
+
 const latestImportMetaSchema = z.object({
   fileName: z.string(),
   sheetName: z.string(),
@@ -78,6 +112,7 @@ const procurementDomain = defineDomain({
   layout: 'single',
   tables: {
     requisitions: domainTable(requisitionLineSchema),
+    purchase_orders: domainTable(purchaseOrderSchema),
   },
   global: {
     schema: procurementMetaSchema,
@@ -122,6 +157,7 @@ function parseSheet(name, worksheet) {
   const baseRows = rows.slice(headerIndex + 1).map((row, offset) => {
     const sourceRowNumber = headerIndex + offset + 2
     const requisitionNo = fieldAt(row, headers, ['请购单号', '请购单编号', '申请单号'])
+    const procurementOrg = fieldAt(row, headers, ['采购组织']) || text(row[13])
     const lineNo = fieldAt(row, headers, ['行号', '明细行号', '请购单行号'])
     const materialCode = fieldAt(row, headers, ['物料编码', '物料代码', '存货编码'])
     const materialName = fieldAt(row, headers, ['物料名称', '商品名称'])
@@ -139,6 +175,7 @@ function parseSheet(name, worksheet) {
       identity,
       sourceRowNumber,
       requisitionNo,
+      procurementOrg,
       lineNo,
       materialCode,
       materialName,
@@ -222,16 +259,28 @@ function fileBaseName(filePath) {
 
 const keywordSplit = /[\s,，、;；|]+/
 const LIST_FIELD_TYPES = {
-  materialName: 'text', materialCode: 'text', materialCategory: 'text', specification: 'text', supplier: 'text',
+  materialName: 'text', materialCode: 'text', materialCategory: 'text', specification: 'text', supplier: 'text', procurementOrg: 'text',
   requisitionNo: 'text', lineNo: 'text', quantity: 'number', demandDate: 'date',
   review: 'tag', remainingQuantity: 'number', purchaseOrderNo: 'text', orderStatus: 'tag',
   expectedShipAt: 'date', notes: 'text', confirmedAt: 'datetime', nextAction: 'text', waitingOn: 'text',
+}
+const ORDER_FIELD_TYPES = {
+  orderNo: 'text', orderDate: 'date', buyer: 'text', supplier: 'text', itemNames: 'text', itemCount: 'number',
+  itemQuantity: 'number', inventoryOrg: 'text', requisitionType: 'text', preparer: 'text', requisitionNos: 'text', purchaseOrderStatus: 'tag',
+  procurementOrg: 'text', procurementOfficer: 'text', procurementDepartment: 'text', project: 'text',
+  materialCategory: 'text', expectedArrivalDate: 'text', arrivalDate: 'text', receivedQuantity: 'number',
+  returnedQuantity: 'number', remainingQuantity: 'number', stockInDate: 'text', stockInQuantity: 'number',
+  returnedStockQuantity: 'number', replenishmentQuantity: 'number', unexecutedCloseQuantity: 'number',
+  requisitionLineClosed: 'text', sourceDocumentNo: 'text', sourceDocumentLineNo: 'text', lineRemark: 'text',
+  requisitionQuantity: 'number', orderedQuantity: 'number', demandDate: 'date', suggestedOrderDate: 'date', customer: 'text', deliveryAddress: 'text',
+  taxInclusiveTotal: 'number', taxExclusiveTotal: 'number', taxRate: 'text',
+  recipient: 'text', recipientPhone: 'text', deliveryTime: 'date',
+  paymentTerms: 'text', sourceFileName: 'text', importedAt: 'datetime',
 }
 const FOLLOW_UP_FIELDS = [
   ['supplier', '供应商'],
   ['expectedShipAt', '预计发货日期'],
   ['notes', '处理备注'],
-  ['orderStatus', '订单办理状态'],
   ['nextAction', '下一步待办'],
   ['waitingOn', '等待对象'],
 ]
@@ -246,6 +295,7 @@ function activity(action, detail, createdAt = nowIso()) {
 
 function listFieldValue(row, fieldId) {
   switch (fieldId) {
+    case 'procurementOrg': return row.procurementOrg || procurementOrgFromSource(row)
     case 'specification': return [row.specification, row.model].filter(Boolean).join(' · ')
     case 'quantity': return Number(row.quantity) || 0
     case 'review': return row.needsReview ? '待复核' : ''
@@ -253,6 +303,11 @@ function listFieldValue(row, fieldId) {
     case 'confirmedAt': return row.confirmedAt || ''
     default: return row[fieldId]
   }
+}
+
+function procurementOrgFromSource(row) {
+  const sourceFields = row.sourceFields || {}
+  return sourceFields['采购组织'] || sourceFields['未命名列14'] || sourceFields['Unnamed column 14'] || ''
 }
 
 function localDateString(date = new Date()) {
@@ -312,9 +367,9 @@ function matchesListFilter(value, rule, type) {
   }
 }
 
-function filterListRows(rows, filters = []) {
+function filterListRows(rows, filters = [], fieldTypes = LIST_FIELD_TYPES, valueOf = listFieldValue) {
   if (!filters.length) return rows
-  const fields = new Map(Object.entries(LIST_FIELD_TYPES))
+  const fields = new Map(Object.entries(fieldTypes))
   const groups = []
   let currentGroup = []
   for (const rule of filters) {
@@ -326,21 +381,21 @@ function filterListRows(rows, filters = []) {
   }
   if (currentGroup.length) groups.push(currentGroup)
   return rows.filter((row) => groups.some((group) => group.every((rule) =>
-    matchesListFilter(listFieldValue(row, rule.fieldId), rule, fields.get(rule.fieldId)),
+    matchesListFilter(valueOf(row, rule.fieldId), rule, fields.get(rule.fieldId)),
   )))
 }
 
-function sortListRows(rows, sort) {
+function sortListRows(rows, sort, fieldTypes = LIST_FIELD_TYPES, valueOf = listFieldValue) {
   const sorts = sort == null ? [] : Array.isArray(sort) ? sort : [sort]
   if (!sorts.length) return rows
   for (const rule of sorts) {
-    if (!LIST_FIELD_TYPES[rule.fieldId]) throw new Error(`不支持的采购排序字段：${rule.fieldId}`)
+    if (!fieldTypes[rule.fieldId]) throw new Error(`不支持的采购排序字段：${rule.fieldId}`)
   }
   const collator = new Intl.Collator('zh-CN', { numeric: true, sensitivity: 'base' })
   return rows.map((row, index) => ({ row, index })).sort((left, right) => {
     for (const rule of sorts) {
-      const leftValue = listFieldValue(left.row, rule.fieldId)
-      const rightValue = listFieldValue(right.row, rule.fieldId)
+      const leftValue = valueOf(left.row, rule.fieldId)
+      const rightValue = valueOf(right.row, rule.fieldId)
       const leftEmpty = leftValue == null || leftValue === ''
       const rightEmpty = rightValue == null || rightValue === ''
       if (leftEmpty || rightEmpty) {
@@ -348,8 +403,8 @@ function sortListRows(rows, sort) {
         return leftEmpty ? 1 : -1
       }
       let compared
-      if (LIST_FIELD_TYPES[rule.fieldId] === 'number') compared = Number(leftValue) - Number(rightValue)
-      else if (LIST_FIELD_TYPES[rule.fieldId] === 'date' || LIST_FIELD_TYPES[rule.fieldId] === 'datetime') {
+      if (fieldTypes[rule.fieldId] === 'number') compared = Number(leftValue) - Number(rightValue)
+      else if (fieldTypes[rule.fieldId] === 'date' || fieldTypes[rule.fieldId] === 'datetime') {
         compared = new Date(String(leftValue)).getTime() - new Date(String(rightValue)).getTime()
         if (Number.isNaN(compared)) compared = collator.compare(String(leftValue), String(rightValue))
       } else compared = collator.compare(String(leftValue), String(rightValue))
@@ -357,6 +412,53 @@ function sortListRows(rows, sort) {
     }
     return left.index - right.index
   }).map(({ row }) => row)
+}
+
+function orderFieldValue(row, fieldId) {
+  const items = row.items || []
+  const uniqueValues = (key) => [...new Set(items.map((item) => item[key]).filter((value) => value != null && value !== '').map(String))].join('、')
+  const sumValues = (key) => items.reduce((total, item) => total + (Number(item[key]) || 0), 0)
+  switch (fieldId) {
+    case 'itemNames': return items.map((item) => item.name).filter(Boolean).join('、')
+    case 'itemCount': return items.length
+    case 'itemQuantity': return sumValues('quantity')
+    case 'requisitionNos': return purchaseOrderRequisitionNos(row).join('、')
+    case 'purchaseOrderStatus': return row.purchaseOrderStatus || '待通知供应商'
+    case 'inventoryOrg': return row.inventoryOrg || uniqueValues('inventoryOrg')
+    case 'procurementOrg': return row.procurementOrg || row.buyer || uniqueValues('procurementOrg')
+    case 'procurementOfficer': return row.procurementOfficer || uniqueValues('procurementOfficer')
+    case 'procurementDepartment': return row.procurementDepartment || uniqueValues('procurementDepartment')
+    case 'project': return row.project || uniqueValues('project')
+    case 'materialCategory': return uniqueValues('materialCategory')
+    case 'expectedArrivalDate': return uniqueValues('expectedArrivalDate')
+    case 'arrivalDate': return uniqueValues('arrivalDate')
+    case 'receivedQuantity': return sumValues('receivedQuantity')
+    case 'returnedQuantity': return sumValues('returnedQuantity')
+    case 'remainingQuantity': return sumValues('remainingQuantity')
+    case 'stockInDate': return uniqueValues('stockInDate')
+    case 'stockInQuantity': return sumValues('stockInQuantity')
+    case 'returnedStockQuantity': return sumValues('returnedStockQuantity')
+    case 'replenishmentQuantity': return sumValues('replenishmentQuantity')
+    case 'unexecutedCloseQuantity': return sumValues('unexecutedCloseQuantity')
+    case 'sourceDocumentNo': return uniqueValues('sourceDocumentNo')
+    case 'sourceDocumentLineNo': return uniqueValues('sourceDocumentLineNo')
+    case 'lineRemark': return uniqueValues('lineRemark')
+    case 'requisitionQuantity': return sumValues('requisitionQuantity')
+    case 'orderedQuantity': return sumValues('orderedQuantity')
+    case 'demandDate': return uniqueValues('demandDate')
+    case 'suggestedOrderDate': return uniqueValues('suggestedOrderDate')
+    case 'requisitionType': return row.requisitionType || uniqueValues('requisitionType')
+    case 'preparer': return row.preparer || uniqueValues('preparer')
+    case 'customer': return uniqueValues('customer')
+    case 'paymentTerms': return (row.paymentTerms || []).join('；')
+    default: return row[fieldId]
+  }
+}
+
+function purchaseOrderRequisitionNos(order) {
+  const stored = Array.isArray(order?.requisitionNos) ? order.requisitionNos : []
+  const fromItems = Array.isArray(order?.items) ? order.items.map((item) => item?.requisitionNo) : []
+  return [...new Set([...stored, ...fromItems].map((value) => String(value ?? '').trim()).filter(Boolean))]
 }
 
 function filterListKeywords(rows, keywords = '') {
@@ -367,6 +469,7 @@ function filterListKeywords(rows, keywords = '') {
 
 function createProcurementService(domain) {
   const requisitions = () => domain.table('requisitions')
+  const purchaseOrders = () => domain.table('purchase_orders')
 
   function all() {
     return [...requisitions().entries()].map(([, row]) => row)
@@ -410,6 +513,194 @@ function createProcurementService(domain) {
     }
   }
 
+  function listPurchaseOrders(page = 1, pageSize = 10, { sort, filters } = {}) {
+    const allOrders = sortListRows(filterListRows([...purchaseOrders().entries()].map(([, order]) => order), filters, ORDER_FIELD_TYPES, orderFieldValue), sort, ORDER_FIELD_TYPES, orderFieldValue)
+    if (!sort || (Array.isArray(sort) && !sort.length)) allOrders.sort((left, right) => String(right.importedAt || '').localeCompare(String(left.importedAt || '')))
+    const safePageSize = Math.min(100, Math.max(1, Math.floor(Number(pageSize) || 10)))
+    const pageCount = Math.max(1, Math.ceil(allOrders.length / safePageSize))
+    const safePage = Math.min(pageCount, Math.max(1, Math.floor(Number(page) || 1)))
+    const rows = allOrders.slice((safePage - 1) * safePageSize, safePage * safePageSize).map((order) => ({
+      ...order,
+      requisitionNos: purchaseOrderRequisitionNos(order),
+      purchaseOrderStatus: order.purchaseOrderStatus || '待通知供应商',
+    }))
+    return { count: allOrders.length, page: safePage, pageSize: safePageSize, rows }
+  }
+
+  async function deletePurchaseOrders(ids) {
+    let deletedCount = 0
+    for (const id of new Set(ids ?? [])) {
+      if (!purchaseOrders().get(id)) continue
+      await purchaseOrders().delete(id)
+      deletedCount += 1
+    }
+    const sync = await syncOwnedPurchaseOrderStatuses()
+    return { deletedCount, ...sync }
+  }
+
+  async function syncOwnedPurchaseOrderStatuses() {
+    const orders = [...purchaseOrders().entries()].map(([, order]) => order)
+    const byOrderNo = new Map()
+    const byRequisition = new Map()
+    const byRequisitionLine = new Map()
+    const normalizeKey = (value) => String(value ?? '').replace(/[\s\u00a0]/g, '').toLowerCase()
+    const addOrder = (map, key, order) => {
+      if (!key || !order.orderNo) return
+      const values = map.get(key) || new Map()
+      values.set(normalizeKey(order.orderNo), order)
+      map.set(key, values)
+    }
+
+    for (const order of orders) {
+      const orderNoKey = normalizeKey(order.orderNo)
+      if (orderNoKey) byOrderNo.set(orderNoKey, order)
+      for (const item of order.items || []) {
+        const requisitionKey = normalizeKey(item.requisitionNo)
+        if (!requisitionKey) continue
+        addOrder(byRequisition, requisitionKey, order)
+        const lineKey = normalizeKey(item.sourceDocumentLineNo || item.lineNo)
+        if (lineKey) addOrder(byRequisitionLine, `${requisitionKey}|${lineKey}`, order)
+      }
+      for (const requisitionNo of order.requisitionNos || []) {
+        addOrder(byRequisition, normalizeKey(requisitionNo), order)
+      }
+    }
+
+    let updatedCount = 0
+    const updatedRequisitions = new Set()
+    for (const [id, row] of requisitions().entries()) {
+      if (!row.isMine) continue
+      const linkedOrderNos = String(row.purchaseOrderNo ?? '').split(/[、,，;；\s]+/).map(normalizeKey).filter(Boolean)
+      let linkedOrders = linkedOrderNos.map((orderNo) => byOrderNo.get(orderNo)).filter(Boolean)
+      if (!linkedOrders.length) {
+        const requisitionKey = normalizeKey(row.requisitionNo)
+        const lineKey = normalizeKey(row.lineNo)
+        if (requisitionKey) {
+          const exactMatches = lineKey ? byRequisitionLine.get(`${requisitionKey}|${lineKey}`) : null
+          const candidates = exactMatches?.size ? exactMatches : byRequisition.get(requisitionKey)
+          // A requisition number can cover several purchase orders. Only infer a
+          // link without a stored PO number when the row resolves unambiguously.
+          if (candidates?.size === 1) linkedOrders = [...candidates.values()]
+        }
+      }
+      const statuses = [...new Set(linkedOrders.map((order) => order.purchaseOrderStatus || '待通知供应商'))]
+      if (linkedOrders.length && statuses.length !== 1) continue
+      const orderNos = [...new Set(linkedOrders.map((order) => order.orderNo).filter(Boolean))]
+      const nextStatus = linkedOrders.length ? statuses[0] : '未匹配采购单'
+      if (nextStatus === (row.orderStatus || '')) continue
+      await requisitions().update(id, (current) => ({
+        ...current,
+        orderStatus: nextStatus,
+        activityLog: [...(current.activityLog || []), activity('同步采购订单状态', `采购订单${orderNos.length ? ` ${orderNos.join('、')}` : ''}：${current.orderStatus || '未记录'} → ${nextStatus}`)],
+      }))
+      updatedCount += 1
+      if (row.requisitionNo) updatedRequisitions.add(normalizeKey(row.requisitionNo))
+    }
+    return { syncedLineCount: updatedCount, syncedRequisitionCount: updatedRequisitions.size }
+  }
+
+  async function cancelPurchaseOrders(ids) {
+    let cancelledCount = 0
+    for (const id of new Set(ids ?? [])) {
+      const current = purchaseOrders().get(id)
+      if (!current || current.purchaseOrderStatus === '取消了采购订单') continue
+      await purchaseOrders().update(id, (order) => ({ ...order, purchaseOrderStatus: '取消了采购订单' }))
+      cancelledCount += 1
+    }
+    const sync = await syncOwnedPurchaseOrderStatuses()
+    return { cancelledCount, ...sync }
+  }
+
+  async function notifyPurchaseOrders(ids) {
+    let notifiedCount = 0
+    for (const id of new Set(ids ?? [])) {
+      const current = purchaseOrders().get(id)
+      if (!current || current.purchaseOrderStatus === '取消了采购订单' || current.purchaseOrderStatus === '已通知供应商') continue
+      await purchaseOrders().update(id, (order) => ({ ...order, purchaseOrderStatus: '已通知供应商' }))
+      notifiedCount += 1
+    }
+    const sync = await syncOwnedPurchaseOrderStatuses()
+    return { notifiedCount, ...sync }
+  }
+
+  async function syncOwnedPurchaseOrderNumbers() {
+    const orders = [...purchaseOrders().entries()].map(([, order]) => order)
+    const byRequisition = new Map()
+    const byRequisitionLine = new Map()
+    const normalizeKey = (value) => String(value ?? '').replace(/[\s\u00a0]/g, '').toLowerCase()
+    const addOrderNo = (map, key, orderNo) => {
+      if (!key || !orderNo) return
+      const values = map.get(key) || new Set()
+      values.add(orderNo)
+      map.set(key, values)
+    }
+
+    for (const order of orders) {
+      const orderNo = String(order.orderNo ?? '').trim()
+      for (const item of order.items || []) {
+        const requisitionKey = normalizeKey(item.requisitionNo)
+        if (!requisitionKey) continue
+        addOrderNo(byRequisition, requisitionKey, orderNo)
+        const lineKey = normalizeKey(item.sourceDocumentLineNo || item.lineNo)
+        if (lineKey) addOrderNo(byRequisitionLine, `${requisitionKey}|${lineKey}`, orderNo)
+      }
+      // Older imports may have only the order-level requisition numbers.
+      for (const requisitionNo of order.requisitionNos || []) {
+        addOrderNo(byRequisition, normalizeKey(requisitionNo), orderNo)
+      }
+    }
+
+    let updatedCount = 0
+    const updatedRequisitions = new Set()
+    const unmatchedRequisitions = new Set()
+    for (const [id, row] of requisitions().entries()) {
+      if (!row.isMine || String(row.purchaseOrderNo ?? '').trim()) continue
+      const requisitionKey = normalizeKey(row.requisitionNo)
+      if (!requisitionKey) { unmatchedRequisitions.add(`row:${id}`); continue }
+      const lineKey = normalizeKey(row.lineNo)
+      const exactMatches = lineKey ? byRequisitionLine.get(`${requisitionKey}|${lineKey}`) : null
+      const orderNumbers = exactMatches?.size ? exactMatches : byRequisition.get(requisitionKey)
+      if (!orderNumbers?.size) { unmatchedRequisitions.add(requisitionKey); continue }
+      const purchaseOrderNo = [...orderNumbers].sort().join('、')
+      await requisitions().update(id, (current) => ({
+        ...current,
+        purchaseOrderNo: String(current.purchaseOrderNo ?? '').trim() ? current.purchaseOrderNo : purchaseOrderNo,
+      }))
+      updatedCount += 1
+      updatedRequisitions.add(requisitionKey)
+    }
+    return {
+      updatedCount,
+      updatedRequisitionCount: updatedRequisitions.size,
+      unmatchedRequisitionCount: unmatchedRequisitions.size,
+    }
+  }
+
+  async function importPurchaseOrders(orders) {
+    const table = purchaseOrders()
+    const incoming = []
+    const seen = new Set([...table.entries()].map(([, order]) => String(order.orderNo ?? '').replace(/[\s\u00a0]/g, '').toLowerCase()))
+    let skippedCount = 0
+    for (const value of orders ?? []) {
+      const orderNo = String(value?.orderNo ?? '').trim()
+      if (!orderNo) throw new Error('采购订单缺少订单编号，无法导入')
+      const normalizedOrderNo = orderNo.replace(/[\s\u00a0]/g, '').toLowerCase()
+      const id = `po:${orderNo}`
+      if (seen.has(normalizedOrderNo)) { skippedCount += 1; continue }
+      seen.add(normalizedOrderNo)
+      incoming.push(purchaseOrderSchema.parse({
+        ...value,
+        id,
+        orderNo,
+        requisitionNos: purchaseOrderRequisitionNos(value),
+        importedAt: nowIso(),
+      }))
+    }
+    for (const order of incoming) await table.put(order.id, order)
+    const sync = await syncOwnedPurchaseOrderStatuses()
+    return { importedCount: incoming.length, skippedCount, ...sync }
+  }
+
   function search(keywords) {
     const words = String(keywords ?? '').split(keywordSplit).map((word) => word.trim()).filter(Boolean)
     const rows = all()
@@ -435,7 +726,8 @@ function createProcurementService(domain) {
       }))
       claimedCount += 1
     }
-    return { claimedCount, batchId }
+    const sync = await syncOwnedPurchaseOrderStatuses()
+    return { claimedCount, batchId, ...sync }
   }
 
   async function updateLine(id, updates) {
@@ -507,6 +799,7 @@ function createProcurementService(domain) {
         confirmedAt: saved ? saved.confirmedAt : null,
         confirmationBatchId: saved ? saved.confirmationBatchId : null,
         notes: saved ? saved.notes : '',
+        procurementOrg: line.procurementOrg || (saved && saved.procurementOrg) || '',
         expectedShipAt: saved && saved.expectedShipAt ? saved.expectedShipAt : (line.buyerEtaFromFile || ''),
         orderStatus: saved ? saved.orderStatus : '',
         nextAction: saved ? saved.nextAction : '',
@@ -521,12 +814,16 @@ function createProcurementService(domain) {
     await domain.global.set({
       latestImport: { fileName, sheetName, importedAt, importedCount: incoming.length - updatedCount, updatedCount },
     })
-    return { importedCount: incoming.length - updatedCount, updatedCount }
+    const sync = await syncOwnedPurchaseOrderStatuses()
+    return { importedCount: incoming.length - updatedCount, updatedCount, ...sync }
   }
 
   function getModelSettings() {
     const settings = domain.global.get().modelSettings
-    return settings ?? { model: 'deepseek-v4-pro', reasoningEffort: 'high' }
+    if (!settings || (settings.model === 'deepseek-v4-pro' && settings.reasoningEffort === 'high')) {
+      return { model: 'deepseek-flash', reasoningEffort: 'off' }
+    }
+    return settings
   }
 
   async function updateModelSettings(model, reasoningEffort) {
@@ -551,10 +848,29 @@ function createProcurementService(domain) {
     return migratedCount
   }
 
+  async function migrateProcurementOrg() {
+    let migratedCount = 0
+    for (const row of all()) {
+      const fromSource = procurementOrgFromSource(row)
+      if (!row.procurementOrg && fromSource) {
+        await requisitions().update(row.id, (current) => ({ ...current, procurementOrg: fromSource }))
+        migratedCount += 1
+      }
+    }
+    return migratedCount
+  }
+
   return {
     all,
     list,
     listPage,
+    listPurchaseOrders,
+    importPurchaseOrders,
+    deletePurchaseOrders,
+    syncOwnedPurchaseOrderStatuses,
+    cancelPurchaseOrders,
+    notifyPurchaseOrders,
+    syncOwnedPurchaseOrderNumbers,
     search,
     claim,
     updateLine,
@@ -566,6 +882,7 @@ function createProcurementService(domain) {
     latestImport: () => domain.global.get().latestImport,
     getModelSettings,
     updateModelSettings,
+    migrateProcurementOrg,
   }
 }
 
@@ -577,6 +894,7 @@ function lineSummary(row) {
   return {
     id: row.id,
     requisitionNo: row.requisitionNo,
+    procurementOrg: row.procurementOrg || procurementOrgFromSource(row),
     lineNo: row.lineNo,
     materialCode: row.materialCode,
     materialName: row.materialName,
@@ -640,7 +958,7 @@ function aiAllowedFields(fields) {
   return fields ?? []
 }
 
-async function aiComplete(ctx, { system, text, temperature = 0, maxTokens = 2000, signal, sessionId, model = 'deepseek-v4-pro', reasoningEffort = 'high' }) {
+async function aiComplete(ctx, { system, text, temperature = 0, maxTokens = 2000, signal, sessionId, model = 'deepseek-flash', reasoningEffort = 'off' }) {
   // 使用 deepseek-account（PKCE 登录，与当前 Agent 同一条路径）。
   // 模型与推理强度由用户在「模型设置」里选择，持久化后经 generate* 方法传入。
   const selection = { provider: 'deepseek-account', model, reasoningEffort }
@@ -709,14 +1027,13 @@ function aiValidateRule(value, fields, capability) {
 }
 
 class ProcurementService extends TypertRemoteService {
-  static inject = ['storageDomain', 'tools', 'fs', 'typert', 'llm', 'agentDefaultModel']
+  static inject = ['storageDomain', 'tools', 'fs', 'llm', 'agentDefaultModel']
 
   constructor(ctx, config) {
     super(ctx, 'procurement')
     this.ctx = ctx
     this.service = null
     this.ready = ctx.storageDomain.open(procurementDomain)
-    ctx.effect(() => ctx.typert.register(TYPERT), 'procurement: typert manifest')
     ctx.effect(() => async () => {
       const domain = await this.ready
       await domain.close()
@@ -733,6 +1050,18 @@ class ProcurementService extends TypertRemoteService {
         if (migrated) this.ctx.logger.info(`[procurement] backfilled materialCategory for ${migrated} rows`)
       } catch (error) {
         this.ctx.logger.warn(`[procurement] materialCategory backfill skipped: ${error instanceof Error ? error.message : String(error)}`)
+      }
+      try {
+        const migrated = await this.service.migrateProcurementOrg()
+        if (migrated) this.ctx.logger.info(`[procurement] backfilled procurementOrg for ${migrated} rows`)
+      } catch (error) {
+        this.ctx.logger.warn(`[procurement] procurementOrg backfill skipped: ${error instanceof Error ? error.message : String(error)}`)
+      }
+      try {
+        const synced = await this.service.syncOwnedPurchaseOrderStatuses()
+        if (synced.syncedLineCount) this.ctx.logger.info(`[procurement] synchronized purchase order status for ${synced.syncedLineCount} owned lines`)
+      } catch (error) {
+        this.ctx.logger.warn(`[procurement] purchase order status sync skipped: ${error instanceof Error ? error.message : String(error)}`)
       }
     }
     return this.service
@@ -795,13 +1124,12 @@ class ProcurementService extends TypertRemoteService {
 
     ctx.tools.register(defineTool({
       name: 'procurement_update_line',
-      description: '更新一条已认领明细的采购员跟进字段：供应商、预计发货时间、处理备注、订单办理状态、下一步待办、等待对象。只有传入的字段会被更新，其余保持不变。',
+      description: '更新一条已认领明细的采购员跟进字段：供应商、预计发货时间、处理备注、下一步待办、等待对象。采购订单状态会根据关联采购订单同步，不能手动更新。只有传入的字段会被更新，其余保持不变。',
       parameters: {
         id: { type: 'string', required: true, description: '明细 id。' },
         supplier: { type: 'string', description: '供应商（采购员人工判断填写，如 东集、盈达、汉印）。' },
         expectedShipAt: { type: 'string', description: '预计发货时间（精确日期或约略文本，如“10月10日左右”）。' },
         notes: { type: 'string', description: '处理备注/决定。' },
-        orderStatus: { type: 'string', description: '订单办理状态，如 NC已保存 / NC待提交 / 待审批 / 已审批 / 已通知供应商。' },
         nextAction: { type: 'string', description: '下一步待办。' },
         waitingOn: { type: 'string', description: '当前等待对象。' },
       },
@@ -903,6 +1231,36 @@ class ProcurementService extends TypertRemoteService {
     return service.listPage(status, page, pageSize, { sort, filters, keywords })
   }
 
+  async listPurchaseOrders(request) {
+    const service = await this.getService()
+    return service.listPurchaseOrders(request.page, request.pageSize, request)
+  }
+
+  async deletePurchaseOrders(request) {
+    const service = await this.getService()
+    return service.deletePurchaseOrders(request.ids)
+  }
+
+  async cancelPurchaseOrders(request) {
+    const service = await this.getService()
+    return service.cancelPurchaseOrders(request.ids)
+  }
+
+  async notifyPurchaseOrders(request) {
+    const service = await this.getService()
+    return service.notifyPurchaseOrders(request.ids)
+  }
+
+  async syncOwnedPurchaseOrderNumbers() {
+    const service = await this.getService()
+    return service.syncOwnedPurchaseOrderNumbers()
+  }
+
+  async importPurchaseOrders(request) {
+    const service = await this.getService()
+    return service.importPurchaseOrders(request.orders)
+  }
+
   async search(request) {
     const service = await this.getService()
     const rows = service.search(request.keywords)
@@ -947,12 +1305,12 @@ class ProcurementService extends TypertRemoteService {
     const provider = 'deepseek-account'
     const fallback = {
       provider,
-      models: [{ id: 'deepseek-v4-pro', name: 'deepseek-v4-pro' }],
-      reasoningEfforts: [{ id: 'low', name: '低' }, { id: 'medium', name: '中' }, { id: 'high', name: '高' }],
+      models: [{ id: 'deepseek-flash', name: 'DeepSeek-V4.1-Flash' }],
+      reasoningEfforts: [{ id: 'off', name: '关闭' }, { id: 'low', name: '低' }, { id: 'medium', name: '中' }, { id: 'high', name: '高' }],
     }
     try {
       const models = await this.ctx.llm.listModels(provider)
-      const firstModel = models[0]?.id ?? 'deepseek-v4-pro'
+      const firstModel = models[0]?.id ?? 'deepseek-flash'
       const info = await this.ctx.llm.resolveModelInfo(provider, firstModel)
       const efforts = info.reasoning?.efforts?.map((effort) => ({ id: effort.id, name: effort.name }))
       return {

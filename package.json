@@ -1,13 +1,13 @@
 {
   "name": "@hilda-biz/dsh-procurement-intake",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "private": true,
   "type": "module",
   "license": "MIT",
   "engines": {
     "dsh": ">=0.2.1-rc.1 <0.3.0"
   },
-  "description": "DeepSeek Harness extension for importing NC requisitions and explicitly claiming procurement lines.",
+  "description": "DeepSeek Harness extension for importing procurement requisitions and purchase orders.",
   "exports": {
     ".": "./index.js",
     "./client": "./client.js",

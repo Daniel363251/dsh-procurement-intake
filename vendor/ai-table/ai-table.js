@@ -3,7 +3,7 @@ import { useTranslation as t } from "react-i18next";
 import * as n from "react";
 import { useCallback as r, useEffect as i, useMemo as a, useRef as o, useState as s } from "react";
 import { Fragment as c, jsx as l, jsxs as u } from "react/jsx-runtime";
-import { ArrowDown as d, ArrowUp as f, ArrowUpDown as p, Bot as m, Calendar as h, Check as g, CheckCircle2 as _, CheckIcon as v, ChevronDown as y, ChevronDownIcon as b, ChevronLeftIcon as x, ChevronRightIcon as S, ChevronUpIcon as C, ChevronsLeft as w, ChevronsLeftIcon as T, ChevronsRight as E, ChevronsRightIcon as D, Clock as O, Columns3 as k, Columns3Icon as A, Copy as j, Filter as M, GripVertical as N, Hash as P, HelpCircle as F, LayoutList as ee, List as I, Loader2 as te, LoaderCircle as L, Palette as ne, Pin as R, Plus as z, RefreshCw as B, RotateCcw as V, Settings2 as re, Sparkles as ie, Table2 as ae, Tag as oe, ThumbsDown as se, ThumbsUp as ce, Trash2 as le, Type as H, UserRound as ue, X as de, XIcon as fe } from "lucide-react";
+import { ArrowDown as d, ArrowUp as f, ArrowUpDown as p, Bot as m, Calendar as h, Check as g, CheckCircle2 as _, CheckIcon as v, ChevronDown as y, ChevronDownIcon as b, ChevronLeftIcon as x, ChevronRightIcon as S, ChevronUpIcon as C, ChevronsLeft as w, ChevronsLeftIcon as T, ChevronsRight as E, ChevronsRightIcon as D, Clock as O, Columns3 as k, Columns3Icon as A, Copy as j, Filter as M, GripVertical as N, Hash as P, HelpCircle as F, LayoutList as ee, List as I, Loader2 as te, LoaderCircle as ne, Palette as L, Pin as R, Plus as z, RefreshCw as B, RotateCcw as V, Settings2 as re, Sparkles as ie, Table2 as ae, Tag as oe, ThumbsDown as se, ThumbsUp as ce, Trash2 as le, Type as H, UserRound as ue, X as de, XIcon as fe } from "lucide-react";
 import { cva as pe } from "class-variance-authority";
 import { AlertDialog as me, Checkbox as he, Dialog as ge, DropdownMenu as U, Label as _e, Popover as ve, Progress as ye, Select as W, Slot as be, Tabs as G, Tooltip as xe } from "radix-ui";
 import { clsx as Se } from "clsx";
@@ -256,6 +256,7 @@ var Be = {
 		}
 	},
 	wms: {
+		group: { selectRows: "选择分组 {{label}} 中的 {{count}} 条记录" },
 		rowActions: { srLabel: "操作" },
 		summary: {
 			total: "合计",
@@ -755,6 +756,7 @@ var Be = {
 		}
 	},
 	wms: {
+		group: { selectRows: "Select {{count}} rows in group {{label}}" },
 		rowActions: { srLabel: "Action" },
 		summary: {
 			total: "Total",
@@ -1819,11 +1821,11 @@ function Ht({ config: e, rows: t, totalCount: r, onQueryChange: i, queryFieldIds
 		d,
 		p,
 		u
-	]), L = n.useCallback(() => {
+	]), ne = n.useCallback(() => {
 		S(y), w(null);
-	}, [y]), ne = JSON.stringify([y.filters, y.sorts]);
+	}, [y]), L = JSON.stringify([y.filters, y.sorts]);
 	n.useEffect(() => {
-		!i || k.current === ne || (k.current = ne, i({
+		!i || k.current === L || (k.current = L, i({
 			filters: y.filters,
 			sorts: y.sorts
 		}));
@@ -1831,16 +1833,16 @@ function Ht({ config: e, rows: t, totalCount: r, onQueryChange: i, queryFieldIds
 		i,
 		y.filters,
 		y.sorts,
-		ne
+		L
 	]), Pt(n.useMemo(() => ({
 		tableId: u,
 		mode: h,
 		modeTransition: _,
 		dirty: N,
 		setMode: F,
-		cancelDraft: L
+		cancelDraft: ne
 	}), [
-		L,
+		ne,
 		N,
 		h,
 		_,
@@ -2010,7 +2012,7 @@ function Ht({ config: e, rows: t, totalCount: r, onQueryChange: i, queryFieldIds
 		updateDraft: ee,
 		updateSorts: I,
 		saveView: te,
-		cancelDraft: L,
+		cancelDraft: ne,
 		setActivePanel: w,
 		setGenerationState: E,
 		createAIField: fe,
@@ -2215,7 +2217,7 @@ function rn({ mode: e, modeTransition: t, dirty: r, setMode: i, cancelDraft: a }
 		disabled: v,
 		onClick: () => m(y),
 		children: [
-			v ? /* @__PURE__ */ l(L, { className: "size-3.5 animate-spin" }) : l(_ ? ae : ie, { className: "size-3.5" }),
+			v ? /* @__PURE__ */ l(ne, { className: "size-3.5 animate-spin" }) : l(_ ? ae : ie, { className: "size-3.5" }),
 			/* @__PURE__ */ l("span", {
 				className: "hidden xl:inline",
 				children: o(v ? "aiTable.modeSwitch.switching" : _ ? "aiTable.modeSwitch.backToClassic" : "aiTable.modeSwitch.switchToSmart")
@@ -3474,7 +3476,7 @@ function Zn(e) {
 //#endregion
 //#region src/components/ai-table/AIFieldPanel.tsx
 function Qn() {
-	let { t: e } = q(), { config: t, draftFields: r, state: i, filteredRows: a, createAIField: o, removeAIField: s, regenerateAIFieldValues: c, saveView: d, setActivePanel: f } = Y(), [p, h] = n.useState(() => ft("aiField")), [g, _] = n.useState(""), [v, y] = n.useState("tag"), [b, x] = n.useState(""), [S, C] = n.useState(!1), [w, T] = n.useState(!1), [E, D] = n.useState([]), [O, k] = n.useState(null), [A, j] = n.useState(!1), [M, N] = n.useState(!1), [P, F] = n.useState(!1), ee = n.useRef(null), I = r.filter((e) => e.aiReadable && e.fieldId !== p), L = {
+	let { t: e } = q(), { config: t, draftFields: r, state: i, filteredRows: a, createAIField: o, removeAIField: s, regenerateAIFieldValues: c, saveView: d, setActivePanel: f } = Y(), [p, h] = n.useState(() => ft("aiField")), [g, _] = n.useState(""), [v, y] = n.useState("tag"), [b, x] = n.useState(""), [S, C] = n.useState(!1), [w, T] = n.useState(!1), [E, D] = n.useState([]), [O, k] = n.useState(null), [A, j] = n.useState(!1), [M, N] = n.useState(!1), [P, F] = n.useState(!1), ee = n.useRef(null), I = r.filter((e) => e.aiReadable && e.fieldId !== p), ne = {
 		fieldId: p,
 		name: g,
 		outputType: v,
@@ -3482,24 +3484,24 @@ function Qn() {
 		referencedFieldIds: n.useMemo(() => nr(b), [b]),
 		autoUpdate: S,
 		allowEmptyReferencedValues: w
-	}, ne = !!(g.trim() && b.trim() && a.length), R = ne || i.dirty;
+	}, L = !!(g.trim() && b.trim() && a.length), R = L || i.dirty;
 	async function V() {
-		if (!ne || A) return;
+		if (!L || A) return;
 		let n = a.slice(0, 5);
 		j(!0), k(null), D(n.map((e, n) => ({
 			rowKey: t.rowKey(e),
 			status: n === 0 ? "running" : "waiting"
 		})));
 		try {
-			let e = n.filter((e) => Rt(L, e, r)), i = e.length ? await t.aiAdapter.previewAIField({
-				definition: L,
+			let e = n.filter((e) => Rt(ne, e, r)), i = e.length ? await t.aiAdapter.previewAIField({
+				definition: ne,
 				rows: e,
 				rowKey: t.rowKey,
 				fields: r
 			}) : [], a = new Map(i.map((e) => [e.rowKey, e]));
 			D(n.map((e) => {
 				let n = t.rowKey(e);
-				if (!Rt(L, e, r)) return {
+				if (!Rt(ne, e, r)) return {
 					rowKey: n,
 					status: "skipped"
 				};
@@ -3526,7 +3528,7 @@ function Qn() {
 		if (!(!R || M)) {
 			N(!0), k(null);
 			try {
-				ne ? (await o(L), ae()) : d();
+				L ? (await o(ne), ae()) : d();
 			} catch (t) {
 				k(t instanceof Error ? t.message : e("aiTable.aiField.generateFailed"));
 			} finally {
@@ -3787,7 +3789,7 @@ function Qn() {
 						type: "button",
 						variant: "outline",
 						size: "sm",
-						disabled: !ne || A,
+						disabled: !L || A,
 						onClick: () => void V(),
 						children: [A ? /* @__PURE__ */ l(te, { className: "size-4 animate-spin" }) : null, e("aiTable.aiField.runPreview")]
 					}),
@@ -4338,7 +4340,7 @@ function ur({ onOpenColumnSettings: e, onRefresh: t, refreshing: n = !1 }) {
 		},
 		{
 			panel: "color",
-			icon: /* @__PURE__ */ l(ne, { className: "size-4" }),
+			icon: /* @__PURE__ */ l(L, { className: "size-4" }),
 			label: r("aiTable.toolbar.color"),
 			summary: yt(s.colorRules),
 			content: /* @__PURE__ */ l(zn, {}),
@@ -5173,7 +5175,7 @@ function Zr({ columns: e, data: t, total: r, page: i, pageSize: a, onPageChange:
 	20,
 	50,
 	100
-], tabs: _, activeTab: v, onTabChange: y, onRowSelectionChange: C, rowSelection: w, getRowId: E, getRowCanSelect: O, loading: k = !1, emptyText: j = "暂无数据", toolbar: M, batchActions: N, columnSettings: P, showColumnControls: F = !0, rowClassName: ee, rowStyle: I, cellClassName: te, cellStyle: L, columnStyle: ne, groups: R, onGroupToggle: z, frozenLeftColumnIds: B, onFrozenColumnCountChange: V, minFrozenColumnCount: ie, scopeNote: ae, belowToolbar: oe, viewToolbar: se, viewStatus: ce, onColumnSettingsStateChange: le }) {
+], tabs: _, activeTab: v, onTabChange: y, onRowSelectionChange: C, rowSelection: w, getRowId: E, getRowCanSelect: O, loading: k = !1, emptyText: j = "暂无数据", toolbar: M, batchActions: N, columnSettings: P, showColumnControls: F = !0, rowClassName: ee, rowStyle: I, cellClassName: te, cellStyle: ne, columnStyle: L, groups: R, onGroupToggle: z, frozenLeftColumnIds: B, onFrozenColumnCountChange: V, minFrozenColumnCount: ie, scopeNote: ae, belowToolbar: oe, viewToolbar: se, viewStatus: ce, onColumnSettingsStateChange: le }) {
 	let { t: H } = q(), [ue, de] = n.useState([]), [fe] = n.useState([]), [pe, me] = n.useState({}), [he, ge] = n.useState({}), U = w ?? he, [_e, ve] = n.useState(!1), ye = Object.keys(U).length, W = !!P, be = n.useMemo(() => W ? e.filter((e) => {
 		let t = e.id ?? ("accessorKey" in e ? String(e.accessorKey) : void 0), n = e.meta?.sticky === "right";
 		return t && !Xr(t) && t !== "actions" && !n;
@@ -5390,7 +5392,7 @@ function Zr({ columns: e, data: t, total: r, page: i, pageSize: a, onPageChange:
 		count: at.current[e.value] ?? e.count
 	}));
 	function ct(e, t, n, r = "") {
-		let i = !!ke && Ae.has(t) || Xr(t) && !!V, a = Ce.get(t) ?? 0, o = te?.(e, t) ?? "", s = L?.(e, t), c = I?.(e);
+		let i = !!ke && Ae.has(t) || Xr(t) && !!V, a = Ce.get(t) ?? 0, o = te?.(e, t) ?? "", s = ne?.(e, t), c = I?.(e);
 		return {
 			cellClass: [
 				n ? "sticky right-0 z-10 bg-card shadow-[-2px_0_5px_-3px_rgba(17,25,45,0.2)] has-[button[data-state=open]]:z-30" : "",
@@ -5577,7 +5579,7 @@ function Zr({ columns: e, data: t, total: r, page: i, pageSize: a, onPageChange:
 									minWidth: e.getSize(),
 									maxWidth: e.getSize(),
 									...r ? { left: i } : {},
-									...ne?.(t)
+									...L?.(t)
 								};
 								return /* @__PURE__ */ l(Hr, {
 									colSpan: e.colSpan,
@@ -5609,10 +5611,26 @@ function Zr({ columns: e, data: t, total: r, page: i, pageSize: a, onPageChange:
 							children: j
 						}) }) : Me.map((e) => {
 							if (e.type === "groupHeader") {
-								let t = /* @__PURE__ */ u("div", {
+								let n = e.group.rows.filter((e) => !O || O(e)).map((e) => E ? E(e) : String(t.indexOf(e))).filter((e) => e !== "-1"), r = n.filter((e) => !!U[e]).length, i = n.length > 0 && r === n.length || r > 0 && "indeterminate", a = /* @__PURE__ */ u("div", {
 									className: "flex min-w-0 items-center gap-1.5",
 									style: { paddingLeft: e.group.depth * 16 },
 									children: [
+										/* @__PURE__ */ l(Hn, {
+											checked: i,
+											disabled: n.length === 0,
+											onCheckedChange: (e) => {
+												let t = e === !0;
+												J.setRowSelection((e) => {
+													let r = { ...e };
+													for (let e of n) t ? r[e] = !0 : delete r[e];
+													return r;
+												});
+											},
+											"aria-label": H("wms.group.selectRows", {
+												label: e.group.label,
+												count: n.length
+											})
+										}),
 										/* @__PURE__ */ l("button", {
 											type: "button",
 											className: "flex size-4 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground",
@@ -5661,7 +5679,7 @@ function Zr({ columns: e, data: t, total: r, page: i, pageSize: a, onPageChange:
 											minWidth: nt,
 											maxWidth: nt
 										},
-										children: t
+										children: a
 									}), rt > 0 ? /* @__PURE__ */ l(Ur, {
 										colSpan: rt,
 										className: "bg-muted/40 p-0",
@@ -5669,22 +5687,22 @@ function Zr({ columns: e, data: t, total: r, page: i, pageSize: a, onPageChange:
 									}) : null] }) : /* @__PURE__ */ l(Ur, {
 										colSpan: $e.length,
 										className: "py-2 font-medium",
-										children: t
+										children: a
 									})
 								}, `gh-${e.group.key}`);
 							}
-							let t = J.getRowModel().rowsById[e.rowId];
-							if (!t) return null;
-							let n = ee?.(t.original);
+							let n = J.getRowModel().rowsById[e.rowId];
+							if (!n) return null;
+							let r = ee?.(n.original);
 							return /* @__PURE__ */ l(Vr, {
-								"data-state": t.getIsSelected() ? "selected" : void 0,
-								className: ["bg-card", n].filter(Boolean).join(" "),
-								style: I?.(t.original),
-								children: t.getVisibleCells().map((e) => {
-									let r = e.getValue(), i = e.column.columnDef.meta?.sticky === "right", { cellClass: a, cellStyle: o } = ct(t.original, String(e.column.id), i, n);
+								"data-state": n.getIsSelected() ? "selected" : void 0,
+								className: ["bg-card", r].filter(Boolean).join(" "),
+								style: I?.(n.original),
+								children: n.getVisibleCells().map((e) => {
+									let t = e.getValue(), i = e.column.columnDef.meta?.sticky === "right", { cellClass: a, cellStyle: o } = ct(n.original, String(e.column.id), i, r);
 									return /* @__PURE__ */ l(Ur, {
 										className: `${a} overflow-hidden text-ellipsis`,
-										title: typeof r == "string" || typeof r == "number" ? String(r) : void 0,
+										title: typeof t == "string" || typeof t == "number" ? String(t) : void 0,
 										style: {
 											...o,
 											width: e.column.getSize(),
@@ -5890,9 +5908,9 @@ function Qr({ columns: e, tableProps: t, showScopeNote: r = !0, clientPagination
 	]), F = n.useMemo(() => P.map(ti).filter((e) => e && e !== "__select__" && e !== "actions"), [P]), ee = n.useMemo(() => {
 		let e = new Set(F), t = new Set(o?.visible ?? F), n = o?.order ?? F;
 		return [...n.filter((t) => e.has(t)), ...F.filter((e) => !n.includes(e))].filter((e) => t.has(e));
-	}, [F, o]), I = ct(E.frozenColumnCount, ee.length), te = ee.slice(0, I), L = n.useCallback((e) => {
+	}, [F, o]), I = ct(E.frozenColumnCount, ee.length), te = ee.slice(0, I), ne = n.useCallback((e) => {
 		s(e);
-	}, []), ne = P.some((e) => ti(e) === "__select__") ? "__select__" : F[0], R = n.useCallback((e) => {
+	}, []), L = P.some((e) => ti(e) === "__select__") ? "__select__" : F[0], R = n.useCallback((e) => {
 		let t = E.collapsedGroupKeys;
 		C({ collapsedGroupKeys: t.includes(e) ? t.filter((t) => t !== e) : [...t, e] });
 	}, [E.collapsedGroupKeys, C]), z = n.useCallback((e) => {
@@ -5922,7 +5940,7 @@ function Qr({ columns: e, tableProps: t, showScopeNote: r = !0, clientPagination
 			let n = c.rowKey(e);
 			return {
 				...Qe(x.get(n)?.get(t) ?? S.get(t)),
-				...t === ne ? J(b.get(n)) : void 0
+				...t === L ? J(b.get(n)) : void 0
 			};
 		},
 		columnStyle: (e) => Qe(S.get(e)),
@@ -5932,7 +5950,7 @@ function Qr({ columns: e, tableProps: t, showScopeNote: r = !0, clientPagination
 		onFrozenColumnCountChange: (e) => C({ frozenColumnCount: Math.max(1, e) }),
 		minFrozenColumnCount: 1,
 		columnSettings: t.columnSettings,
-		onColumnSettingsStateChange: t.columnSettings ? L : void 0,
+		onColumnSettingsStateChange: t.columnSettings ? ne : void 0,
 		viewToolbar: ({ openColumnSettings: e }) => /* @__PURE__ */ l(ur, {
 			onOpenColumnSettings: t.columnSettings ? e : void 0,
 			onRefresh: t.onRefresh,

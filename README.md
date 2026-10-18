@@ -7,7 +7,8 @@
 - **NC 请购单导入**：浏览器内解析 `.xls` / `.xlsx`，按常见 NC 表头识别列，预览前 5 行，支持多工作表切换，标记缺关键信息/重复标识的行。
 - **物料关键词筛选**：支持空格、逗号、中文逗号、分号、`|` 分隔多词（任一命中），服务端筛选后分页。
 - **认领（claim）**：勾选待筛选明细 → 「认领为我的需求」，支持跨页勾选后一起认领。
-- **我的需求**：独立的已认领视图，支持查看需求详情、更新供应商/订单办理状态/预计发货日期/下一步待办/等待对象/备注并查看操作记录，也支持批量更新供应商、批量更新办理状态、批量更新发货日期和批量删除。
+- **我的需求**：独立的已认领视图，支持查看需求详情、更新供应商/预计发货日期/下一步待办/等待对象/备注并查看操作记录；采购订单状态根据关联订单同步，没有匹配订单时显示「未匹配采购单」。支持批量更新供应商、批量更新发货日期和批量删除。
+- **订单交付**：一次选择最多 10 个采购订单 `.xls` / `.xlsx` 文件；浏览器解析订单编号、双方信息、商品明细、金额、交付信息和合同条款，确认预览后保存到宿主存储，并在分页列表查看订单和展开明细。订单编号重复时跳过，不覆盖已导入记录；变更订单状态时会同步更新唯一关联的已认领需求。
 - **AI 智能表格**：内置排序、筛选、分页、填色、分组、添加 AI 字段和列设置（调整字段顺序与显隐，按「待筛选 / 我的需求」分别保存在当前浏览器；复用 `@enterprise/ai-table`，锁定 smart 模式）。
 - **AI 能力（接真 LLM）**：AI 筛选、AI 填色、AI 字段逐行计算，走 `deepseek-account`（PKCE 登录态）模型。
 - **模型设置**：面板内可选模型与推理强度，持久化到宿主。
@@ -70,6 +71,10 @@ Typert 远程协议（/api/procurement/*）
 | `sourceFields` | 原始列字段（兜底） |
 | `activityLog` | 操作日志 |
 
+### 采购订单（宿主存储域）
+
+采购订单按订单编号去重，保存订单双方、日期、金额与税率、商品明细、交付信息、付款条款、其他条款、来源文件名和导入时间。订单列表按导入时间倒序分页。
+
 ### 全局（同一存储文件）
 
 - `latestImport`：最近一次导入信息。
@@ -82,9 +87,15 @@ Typert 远程协议（/api/procurement/*）
 | 方法 | 参数 | 说明 |
 |---|---|---|
 | `procurement/list` | `status`（pending/mine/all）、`page`、`pageSize`（≤500）、`sort`（单条或数组）、`filters`（AITableFilterRule[]）、`keywords` | 服务端筛选/排序/关键词后分页，返回 `{ rows, count, statusCount, requisitionCount, matchingRequisitionCount, page, pageSize, contextRows, latestImport }` |
+| `procurement/listPurchaseOrders` | `page`、`pageSize`（≤100） | 分页查询已导入的采购订单 |
+| `procurement/importPurchaseOrders` | `orders`（1–10） | 持久化浏览器解析出的采购订单；重复订单编号会跳过 |
+| `procurement/deletePurchaseOrders` | `ids` | 删除选中的采购订单 |
+| `procurement/cancelPurchaseOrders` | `ids` | 将选中订单标记为取消，保留订单数据，并同步关联需求状态 |
+| `procurement/notifyPurchaseOrders` | `ids` | 将选中订单标记为已通知供应商；已取消订单跳过，并同步关联需求状态 |
+| `procurement/syncOwnedPurchaseOrderNumbers` | — | 从唯一匹配的订单补齐已认领需求缺少的采购订单号，并同步状态 |
 | `procurement/search` | `keywords` | 按物料名称关键词搜索（不分组，返回全部命中） |
 | `procurement/claim` | `ids` | 认领选中的待筛选明细 |
-| `procurement/updateLine` | `id` + `supplier?`/`expectedShipAt?`/`notes?`/`orderStatus?`/`nextAction?`/`waitingOn?` | 更新一条已认领明细的跟进字段 |
+| `procurement/updateLine` | `id` + `supplier?`/`expectedShipAt?`/`notes?`/`nextAction?`/`waitingOn?` | 更新一条已认领明细的跟进字段；采购订单状态不可手动更新 |
 | `procurement/updateSuppliers` | `ids`、`supplier` | 批量更新已认领明细的供应商字段 |
 | `procurement/importLines` | `lines`、`fileName`、`sheetName` | 导入浏览器解析出的明细（重复按识别键合并，保留已认领状态与采购员字段） |
 | `procurement/clearPending` | — | 清空所有未认领的待筛选明细 |

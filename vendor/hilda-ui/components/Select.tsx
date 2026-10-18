@@ -32,7 +32,7 @@ type SelectContentProps = SelectPrimitive.Popup.Props & {
 function SelectContent({ className, children, portalContainer, ...props }: SelectContentProps) {
   return (
     <SelectPrimitive.Portal container={portalContainer}>
-      <SelectPrimitive.Positioner sideOffset={4} className="cn-select-positioner">
+      <SelectPrimitive.Positioner alignItemWithTrigger={false} sideOffset={4} className="cn-select-positioner">
         <SelectPrimitive.Popup data-slot="select-content" className={cn("cn-select-content", className)} {...props}>
           <SelectPrimitive.List>{children}</SelectPrimitive.List>
         </SelectPrimitive.Popup>

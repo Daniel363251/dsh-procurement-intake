@@ -8,7 +8,7 @@ export const TYPERT = {
     return $remote.descriptors
   },
   model: {
-    services: [{ key: 'procurement', exportName: 'ProcurementService', members: [], types: [] }],
+    services: [{ key: 'procurement', exportName: 'ProcurementService', tags: [], members: [], types: [] }],
     events: [],
     objects: [],
   },
