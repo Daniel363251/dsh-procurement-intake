@@ -987,9 +987,9 @@ function createProcurementService(domain) {
       }))
     }
     for (const order of incoming) await table.put(order.id, order)
-    await collectImportedMasterData({ orders: incoming })
+    const masterData = await collectImportedMasterData({ orders: incoming })
     const sync = await syncOwnedPurchaseOrderStatuses()
-    return { importedCount: incoming.length, skippedCount, ...sync }
+    return { importedCount: incoming.length, skippedCount, masterDataCreatedCount: masterData.createdCount, ...sync }
   }
 
   function search(keywords) {
@@ -1102,12 +1102,12 @@ function createProcurementService(domain) {
       }
     })
     for (const row of incoming) await requisitions().put(row.id, requisitionLineSchema.parse(row))
-    await collectImportedMasterData({ lines: incoming })
+    const masterData = await collectImportedMasterData({ lines: incoming })
     await domain.global.set({ ...domain.global.get(),
       latestImport: { fileName, sheetName, importedAt, importedCount: incoming.length - updatedCount, updatedCount },
     })
     const sync = await syncOwnedPurchaseOrderStatuses()
-    return { importedCount: incoming.length - updatedCount, updatedCount, ...sync }
+    return { importedCount: incoming.length - updatedCount, updatedCount, masterDataCreatedCount: masterData.createdCount, ...sync }
   }
 
   function getModelSettings() {

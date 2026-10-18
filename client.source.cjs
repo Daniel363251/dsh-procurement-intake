@@ -51,7 +51,7 @@ const zh = {
   context: '同单其他明细', contextOnly: '仅作上下文，不会自动认领', claimed: '已认领', notFound: '没有找到匹配的物料', tryShorter: '试试更短的关键词，或清空条件。',
   imported: '已导入', added: '新增', updated: '更新', sheets: '工作表', source: '来源', expectedDate: '需求日期', spec: '规格 / 型号',
   purchaseOrder: '采购订单号', supplier: '供应商', materialCode: '物料编码', materialCategory: '物料分类', claimedAt: '认领时间', tableTotal: '共 {count} 条', clearPending: '清空待筛选', clearPendingConfirm: '确认清空所有待筛选明细？已认领的不受影响。', delete: '删除', deleteConfirm: '确认删除这条已认领明细？', shipEdit: '填写发货时间', workspace: '工作台', requests: '采购需求', ordersMenu: '订单交付', issues: '异常处理', fullscreen: '全屏', comingSoon: '该模块正在规划中。', modelSettings: '模型设置', modelLabel: '模型', reasoningEffortLabel: '推理强度', saveSettings: '保存设置', settingsSaved: '设置已保存', settingsSaveError: '保存设置失败，请重试。', materialInfo: '物料信息', orderStatus: '采购订单状态', nextAction: '下一步待办', waitingOn: '等待对象', notes: '处理备注', remainingQuantity: '未到货数量', viewDetails: '查看详情', detailTitle: '采购需求详情', detailBasics: '需求信息', followupSection: '采购跟进', saveDetail: '保存跟进', saving: '保存中…', detailSaved: '跟进信息已保存', notRecorded: '未记录', sourceFile: '导入文件', importedAt: '导入时间', activityHistory: '操作记录', close: '关闭', batchSupplier: '批量更新供应商', batchSupplierConfirm: '将为已选中的 {count} 条明细填写供应商。', batchSupplierSaved: '已为 {count} 条明细填写供应商。', supplierPlaceholder: '如：东集、盈达、汉印', orderImportHelp: '选择采购订单 Excel，每个文件创建一张订单；单次最多 10 个文件。', orderFiles: '选择订单文件', orderPreview: '待导入订单', importOrders: '导入采购订单', orderImporting: '正在导入订单…', orderNo: '订单编号', orderDateLabel: '订单日期', itemCount: '商品明细', orderTotal: '含税金额', deliveryAddressLabel: '交付地点', orderDetails: '订单详情', noOrders: '暂无采购订单，请先导入订单 Excel。', orderDuplicate: '订单编号已存在，将跳过重复订单。', batchFileLimit: '一次最多选择 10 个 Excel 文件。', orderImportSuccess: '订单导入完成', orderParseError: '以下文件无法识别', previousPage: '上一页', nextPage: '下一页', pageLabel: '第 {page} 页，共 {count} 张订单',
-  masterData: '基础资料', suppliers: '供应商', materials: '物料', materialCategories: '物料分类', masterDataHelp: '从导入数据沉淀并维护采购常用基础资料。', addMasterRecord: '新增资料', editMasterRecord: '编辑资料', masterName: '名称', masterCode: '编码', masterSpecification: '规格 / 型号', masterUnit: '单位', masterStatus: '状态', enabled: '启用', disabled: '停用', enableSelected: '批量启用', disableSelected: '批量停用', masterDeleteConfirm: '确认删除选中的 {count} 条基础资料？', masterSaved: '基础资料已保存', masterDeleted: '已删除 {count} 条资料', masterStatusUpdated: '已更新 {count} 条资料状态', noMasterData: '暂无资料。导入请购单或采购订单后，会自动沉淀不重复数据。', cancelEdit: '取消',
+  masterData: '基础资料', suppliers: '供应商', materials: '物料', materialCategories: '物料分类', masterDataHelp: '从导入数据沉淀并维护采购常用基础资料。', masterDataLoading: '正在读取基础资料…', masterDataImportedSummary: '新增沉淀基础资料 {count} 条', addMasterRecord: '新增资料', editMasterRecord: '编辑资料', masterName: '名称', masterCode: '编码', masterSpecification: '规格 / 型号', masterUnit: '单位', masterStatus: '状态', enabled: '启用', disabled: '停用', enableSelected: '批量启用', disableSelected: '批量停用', masterDeleteConfirm: '确认删除选中的 {count} 条基础资料？', masterSaved: '基础资料已保存', masterDeleted: '已删除 {count} 条资料', masterStatusUpdated: '已更新 {count} 条资料状态', noMasterData: '暂无资料。导入请购单或采购订单后，会自动沉淀不重复数据。', cancelEdit: '取消',
 }
 const en = {
   category: 'Procurement', title: 'Hilda’s Harness Space', subtitle: 'Import lines, filter by material name, then confirm which requests you will own.', pendingTab: 'To review', mineTab: 'My requests', createdAt: 'Created at', updatedAt: 'Updated at', masterDataFields: 'Record details',
@@ -70,7 +70,7 @@ const en = {
   context: 'Other lines on this requisition', contextOnly: 'For context only; these will not be claimed automatically', claimed: 'Claimed', notFound: 'No matching material found', tryShorter: 'Try a shorter keyword or clear the search.',
   imported: 'Imported', added: 'added', updated: 'updated', sheets: 'worksheets', source: 'Source', expectedDate: 'Demand date', spec: 'Spec / model',
   purchaseOrder: 'Purchase order no.', supplier: 'Supplier', materialCode: 'Material code', materialCategory: 'Material category', claimedAt: 'Claimed at', tableTotal: '{count} in total', clearPending: 'Clear pending', clearPendingConfirm: 'Clear all pending lines? Claimed lines are kept.', delete: 'Delete', deleteConfirm: 'Delete this claimed line?', shipEdit: 'Set ship date', workspace: 'Workspace', requests: 'Requests', ordersMenu: 'Orders', issues: 'Exceptions', fullscreen: 'Fullscreen', comingSoon: 'This module is planned.', modelSettings: 'Model settings', modelLabel: 'Model', reasoningEffortLabel: 'Reasoning effort', saveSettings: 'Save settings', settingsSaved: 'Settings saved', settingsSaveError: 'Could not save settings.', materialInfo: 'Material info', orderStatus: 'Purchase order status', nextAction: 'Next action', waitingOn: 'Waiting on', notes: 'Notes', remainingQuantity: 'Remaining qty', viewDetails: 'View details', detailTitle: 'Procurement request details', detailBasics: 'Request details', followupSection: 'Procurement follow-up', saveDetail: 'Save follow-up', saving: 'Saving…', detailSaved: 'Follow-up saved', notRecorded: 'Not recorded', sourceFile: 'Import file', importedAt: 'Imported at', activityHistory: 'Activity history', close: 'Close', batchSupplier: 'Update supplier in bulk', batchSupplierConfirm: 'The supplier will be filled for {count} selected lines.', batchSupplierSaved: 'Supplier filled for {count} lines.', supplierPlaceholder: 'e.g. a vendor name', orderImportHelp: 'Select purchase order Excel files. Each file creates one order; up to 10 files per import.', orderFiles: 'Choose order files', orderPreview: 'Orders to import', importOrders: 'Import purchase orders', orderImporting: 'Importing orders…', orderNo: 'Order number', orderDateLabel: 'Order date', itemCount: 'Items', orderTotal: 'Tax inclusive total', deliveryAddressLabel: 'Delivery address', orderDetails: 'Order details', noOrders: 'No purchase orders yet. Import Excel files to begin.', orderDuplicate: 'Order number already exists; duplicate orders will be skipped.', batchFileLimit: 'Choose up to 10 files at a time.', orderParseError: 'Files that could not be read', previousPage: 'Previous', nextPage: 'Next', pageLabel: 'Page {page} · {count} orders',
-  masterData: 'Master data', suppliers: 'Suppliers', materials: 'Materials', materialCategories: 'Material categories', masterDataHelp: 'Build and maintain reusable procurement records from imports.', addMasterRecord: 'Add record', editMasterRecord: 'Edit record', masterName: 'Name', masterCode: 'Code', masterSpecification: 'Spec / model', masterUnit: 'Unit', masterStatus: 'Status', enabled: 'Enabled', disabled: 'Disabled', enableSelected: 'Enable selected', disableSelected: 'Disable selected', masterDeleteConfirm: 'Delete {count} selected master records?', masterSaved: 'Master data saved', masterDeleted: 'Deleted {count} records', masterStatusUpdated: 'Updated status for {count} records', noMasterData: 'No records yet. Import requisitions or purchase orders to collect unique data automatically.', cancelEdit: 'Cancel',
+  masterData: 'Master data', suppliers: 'Suppliers', materials: 'Materials', materialCategories: 'Material categories', masterDataHelp: 'Build and maintain reusable procurement records from imports.', masterDataLoading: 'Loading master data…', masterDataImportedSummary: 'Added {count} master data records', addMasterRecord: 'Add record', editMasterRecord: 'Edit record', masterName: 'Name', masterCode: 'Code', masterSpecification: 'Spec / model', masterUnit: 'Unit', masterStatus: 'Status', enabled: 'Enabled', disabled: 'Disabled', enableSelected: 'Enable selected', disableSelected: 'Disable selected', masterDeleteConfirm: 'Delete {count} selected master records?', masterSaved: 'Master data saved', masterDeleted: 'Deleted {count} records', masterStatusUpdated: 'Updated status for {count} records', noMasterData: 'No records yet. Import requisitions or purchase orders to collect unique data automatically.', cancelEdit: 'Cancel',
 }
 
 Object.assign(zh, { deleteSelected: '删除所选', orderBuyer: '采购方', orderItems: '产品名称', orderQuantity: '商品数量', taxExclusiveTotal: '不含税金额', taxRate: '税率', recipient: '收货人', recipientPhone: '收货电话', deliveryTime: '交付时间', paymentTerms: '付款条款', orderFiles: '选择订单文件夹', orderImportHelp: '选择包含采购订单 Excel 的文件夹，自动识别模板并跳过重复订单。', folderNoExcel: '所选文件夹中没有 .xls 或 .xlsx 文件。', allOrdersDuplicate: '识别到 {count} 张重复订单，已全部跳过。', duplicatesSkipped: '跳过重复 {count} 张' })
@@ -962,6 +962,8 @@ function IntakeBody({ t, data, sessionId }) {
   const [masterDataRows, setMasterDataRows] = React.useState([])
   const [masterDataSelected, setMasterDataSelected] = React.useState(new Set())
   const [masterDataLoading, setMasterDataLoading] = React.useState(false)
+  const [masterDataOverviewCount, setMasterDataOverviewCount] = React.useState(null)
+  const [masterDataOverviewLoading, setMasterDataOverviewLoading] = React.useState(false)
   const [masterDataSaving, setMasterDataSaving] = React.useState(false)
   const [masterDataDraft, setMasterDataDraft] = React.useState(null)
   const [orderRows, setOrderRows] = React.useState([])
@@ -1021,9 +1023,31 @@ function IntakeBody({ t, data, sessionId }) {
       setMasterDataLoading(false)
     }
   }, [data, masterDataType])
+  const refreshMasterDataOverview = React.useCallback(async () => {
+    setMasterDataOverviewLoading(true)
+    try {
+      const lists = await Promise.all(['suppliers', 'materials', 'materialCategories'].map(type => data.listMasterData(type)))
+      setMasterDataOverviewCount(lists.reduce((count, result) => count + (result.rows || []).length, 0))
+    } catch (caught) {
+      setMasterDataOverviewCount(-1)
+      setError(caught instanceof Error ? caught.message : String(caught))
+    } finally {
+      setMasterDataOverviewLoading(false)
+    }
+  }, [data])
   React.useEffect(() => {
     if (menu === 'masterData' && masterDataType) void refreshMasterData()
   }, [masterDataType, menu, refreshMasterData])
+  React.useEffect(() => {
+    if (menu === 'masterData' && !masterDataType && masterDataOverviewCount === null) void refreshMasterDataOverview()
+  }, [masterDataOverviewCount, masterDataType, menu, refreshMasterDataOverview])
+  function openMasterDataType(type) {
+    setMasterDataType(type)
+    setMasterDataRows([])
+    setMasterDataLoading(true)
+    setMasterDataSelected(new Set())
+    setMasterDataDraft(null)
+  }
   async function saveMasterRecord() {
     if (!masterDataDraft || masterDataSaving) return
     setMasterDataSaving(true); setError(''); setSuccess('')
@@ -1347,7 +1371,7 @@ function IntakeBody({ t, data, sessionId }) {
         setOrderDuplicateCount(0)
         if (!orderFileErrors.length) setOrderView('manage')
       }
-      setSuccess(`${t('orderImportSuccess')}：新增 ${result.importedCount} 张，重复跳过 ${result.skippedCount} 张`)
+      setSuccess(`${t('orderImportSuccess')}：新增 ${result.importedCount} 张，重复跳过 ${result.skippedCount} 张 · ${t('masterDataImportedSummary').replace('{count}', String(result.masterDataCreatedCount || 0))}`)
       await Promise.all([loadOrders(1), loadPage('mine', minePage, minePageSize)])
     } catch (caught) { setError(caught instanceof Error ? caught.message : t('saveError')) }
     finally { setImporting(false) }
@@ -1435,7 +1459,7 @@ function IntakeBody({ t, data, sessionId }) {
     try {
       const result = await data.importLines(sheet.lines, fileName, sheet.name)
       setSheets([]); setSelected(new Set()); keywordRef.current = ''; previousKeyword.current = ''; setQuery(''); setError('')
-      setSuccess(`${t('imported')} ${sheet.lines.length} ${t('lines')} · ${t('added')} ${result.importedCount} · ${t('updated')} ${result.updatedCount}`)
+      setSuccess(`${t('imported')} ${sheet.lines.length} ${t('lines')} · ${t('added')} ${result.importedCount} · ${t('updated')} ${result.updatedCount} · ${t('masterDataImportedSummary').replace('{count}', String(result.masterDataCreatedCount || 0))}`)
       await refresh()
     } catch { setError(t('saveError')) }
     finally { setImporting(false) }
@@ -1795,24 +1819,26 @@ function IntakeBody({ t, data, sessionId }) {
   const masterDataSection = h('section', { className: 'pi-card pi-master-data-section' },
     h('div', { className: 'pi-table-toolbar' },
       h('div', null, h('h2', { className: 'pi-section-title' }, t('masterData')), h('p', { className: 'pi-help' }, t('masterDataHelp')))),
-    !masterDataType ? h('div', { className: 'pi-master-tiles' }, ...[
-      ['suppliers', t('suppliers')], ['materials', t('materials')], ['materialCategories', t('materialCategories')],
-    ].map(([type, label]) => h('button', { key: type, type: 'button', className: 'pi-master-tile', onClick: () => { setMasterDataType(type); setMasterDataSelected(new Set()) } },
-      h('span', { className: 'pi-master-tile-icon', 'aria-hidden': true }, h(type === 'suppliers' ? Building2 : type === 'materials' ? Package : Tags, { 'aria-hidden': true })),
-      h('strong', null, label))))
+    !masterDataType ? masterDataOverviewLoading
+      ? h('div', { className: 'pi-empty', role: 'status' }, h('div', { className: 'pi-empty-state-content' }, h('span', { className: 'pi-spinner', 'aria-hidden': true }), h('p', null, t('masterDataLoading'))))
+      : masterDataOverviewCount === 0
+        ? h('div', { className: 'pi-empty' }, emptyStateContent(t('noMasterData'), t('masterDataHelp')))
+        : h('div', { className: 'pi-master-tiles' }, ...[
+          ['suppliers', t('suppliers')], ['materials', t('materials')], ['materialCategories', t('materialCategories')],
+        ].map(([type, label]) => h('button', { key: type, type: 'button', className: 'pi-master-tile', onClick: () => openMasterDataType(type) },
+          h('span', { className: 'pi-master-tile-icon', 'aria-hidden': true }, h(type === 'suppliers' ? Building2 : type === 'materials' ? Package : Tags, { 'aria-hidden': true })),
+          h('strong', null, label))))
       : h(React.Fragment, null,
         h('div', { className: 'pi-master-subnav' },
-          h('button', { type: 'button', className: 'pi-master-back', onClick: () => { setMasterDataType(null); setMasterDataDraft(null); setMasterDataSelected(new Set()) } }, '‹'),
+          h('button', { type: 'button', className: 'pi-master-back', onClick: () => { setMasterDataType(null); setMasterDataRows([]); setMasterDataDraft(null); setMasterDataSelected(new Set()); setMasterDataOverviewCount(null) } }, '‹'),
           ...[
           ['suppliers', t('suppliers')], ['materials', t('materials')], ['materialCategories', t('materialCategories')],
-        ].map(([type, label]) => h('button', { key: type, type: 'button', className: `pi-master-subnav-item${masterDataType === type ? ' is-active' : ''}`, onClick: () => { setMasterDataType(type); setMasterDataSelected(new Set()); setMasterDataDraft(null) } }, label))),
-        masterDataLoading || masterDataRows.length > 0 ? h('div', { className: 'pi-batch-bar' },
+        ].map(([type, label]) => h('button', { key: type, type: 'button', className: `pi-master-subnav-item${masterDataType === type ? ' is-active' : ''}`, onClick: () => { if (masterDataType !== type) openMasterDataType(type) } }, label))),
+        masterDataRows.length > 0 ? h('div', { className: 'pi-batch-bar' },
           h('button', { type: 'button', className: 'pi-button pi-button--small', disabled: !masterDataSelected.size || masterDataLoading, onClick: () => void changeMasterDataStatus([...masterDataSelected], 'enabled') }, `${t('enableSelected')}${masterDataSelected.size ? ` (${masterDataSelected.size})` : ''}`),
           h('button', { type: 'button', className: 'pi-button pi-button--small', disabled: !masterDataSelected.size || masterDataLoading, onClick: () => void changeMasterDataStatus([...masterDataSelected], 'disabled') }, `${t('disableSelected')}${masterDataSelected.size ? ` (${masterDataSelected.size})` : ''}`),
           h('button', { type: 'button', className: 'pi-button pi-button--small pi-button--danger', disabled: !masterDataSelected.size || masterDataLoading, onClick: () => void deleteMasterRecords([...masterDataSelected]) }, `${t('delete')}${masterDataSelected.size ? ` (${masterDataSelected.size})` : ''}`)) : null,
-        masterDataRows.length === 0 && !masterDataLoading
-          ? h('div', { className: 'pi-empty' }, emptyStateContent(t('noMasterData'), t('masterDataHelp')))
-          : h(AIDataTable, {
+        masterDataRows.length > 0 ? h(AIDataTable, {
           definition: masterDataDefinition, rows: masterDataRows, storageScope: 'hilda:dsh-procurement-intake',
           fillWidth: true,
           defaultMode: 'smart', modeLock: 'smart', showModeSwitch: false, showScopeNote: false,
@@ -1821,7 +1847,9 @@ function IntakeBody({ t, data, sessionId }) {
           rowSelection: masterDataSelection,
           onRowSelectionChange: selection => setMasterDataSelected(new Set(Object.keys(selection).filter(id => selection[id]))),
           leadingColumns: [masterDataSelectColumn], additionalColumns: [masterDataActionColumn], emptyText: emptyStateContent(t('noMasterData'), t('masterDataHelp'), { compact: true }),
-        })))
+        }) : masterDataLoading
+          ? h('div', { className: 'pi-empty', role: 'status' }, h('div', { className: 'pi-empty-state-content' }, h('span', { className: 'pi-spinner', 'aria-hidden': true }), h('p', null, t('masterDataLoading'))))
+          : h('div', { className: 'pi-empty' }, emptyStateContent(t('noMasterData'), t('masterDataHelp')))))
   const masterDataEditDrawer = masterDataDraft && h('div', {
     className: 'pi-drawer-overlay',
     onClick: event => { if (event.target === event.currentTarget && !masterDataSaving) setMasterDataDraft(null) },
@@ -2178,7 +2206,7 @@ function IntakeBody({ t, data, sessionId }) {
       ['workspace', t('workspace'), LayoutDashboard], ['requests', t('requests'), ClipboardList],
       ['orders', t('ordersMenu'), PackageCheck], ['issues', t('issues'), TriangleAlert],
       ['settings', t('modelSettings'), Settings2], ['masterData', t('masterData'), Database],
-    ].map(([key, label, Icon]) => h('button', { key, type: 'button', className: 'pi-menu-item', onClick: () => { if (key === 'masterData') { setMasterDataType(null); setMasterDataDraft(null); setMasterDataSelected(new Set()) } setMenu(key) }, 'aria-current': menu === key ? 'page' : undefined }, h(Icon, { 'aria-hidden': true }), h('span', null, label)))),
+    ].map(([key, label, Icon]) => h('button', { key, type: 'button', className: 'pi-menu-item', onClick: () => { if (key === 'masterData') { setMasterDataType(null); setMasterDataRows([]); setMasterDataDraft(null); setMasterDataSelected(new Set()); setMasterDataOverviewCount(null) } setMenu(key) }, 'aria-current': menu === key ? 'page' : undefined }, h(Icon, { 'aria-hidden': true }), h('span', null, label)))),
     success && h('div', { className: 'cn-toast', role: 'status', 'aria-live': 'polite' },
       h('span', { className: 'cn-toast-mark', 'aria-hidden': true }, '✓'),
       h('div', { className: 'cn-toast-copy' }, h('strong', null, success)),
