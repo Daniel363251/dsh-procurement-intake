@@ -1,3 +1,3 @@
-import { $remote } from './remote-def.js'
+import { $remote } from './dist/remote-def.js'
 
 export const TYPERT_REMOTE = $remote

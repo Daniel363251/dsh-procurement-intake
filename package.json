@@ -1,6 +1,6 @@
 {
   "name": "@hilda-biz/dsh-procurement-intake",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -21,6 +21,7 @@
   "files": [
     "index.js",
     "src/",
+    "dist/",
     "client.js",
     "cordis.patch.yml",
     "remote-def.js",
@@ -44,7 +45,7 @@
     }
   },
   "scripts": {
-    "build": "npm run lint && node build-client.mjs",
+    "build": "npm run lint && node build-host.mjs && node build-client.mjs",
     "lint": "eslint \"src/**/*.{js,cjs}\""
   },
   "dependencies": {

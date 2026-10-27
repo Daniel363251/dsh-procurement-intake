@@ -4331,44 +4331,44 @@ function lr({ active: e, label: t, ariaLabel: n, onClick: r }) {
 }
 //#endregion
 //#region src/components/ai-table/AITableToolbar.tsx
-function ur() {
-	let { t: e } = J(), { state: t, setActivePanel: n, appliedFields: r, restoreDefaultView: i } = X(), { savedView: a } = t, o = r.find((e) => e.fieldId === a.groups[0]?.fieldId), s = [
+function ur({ openColumnSettings: e, selectedCount: t }) {
+	let { t: n } = J(), { state: r, setActivePanel: i, appliedFields: a, restoreDefaultView: o } = X(), { savedView: s } = r, c = a.find((e) => e.fieldId === s.groups[0]?.fieldId), d = [
 		{
 			panel: "filter",
 			icon: /* @__PURE__ */ l(A, { className: "size-4" }),
-			label: e("aiTable.toolbar.filter"),
-			summary: dt(a.filters),
+			label: n("aiTable.toolbar.filter"),
+			summary: dt(s.filters),
 			content: /* @__PURE__ */ l(ir, {}),
 			width: "w-[590px]"
 		},
 		{
 			panel: "group",
 			icon: /* @__PURE__ */ l(P, { className: "size-4" }),
-			label: e("aiTable.toolbar.group"),
-			summary: o ? e("aiTable.toolbar.groupSummaryByField", { field: o.label }) : null,
+			label: n("aiTable.toolbar.group"),
+			summary: c ? n("aiTable.toolbar.groupSummaryByField", { field: c.label }) : null,
 			content: /* @__PURE__ */ l(or, {}),
 			width: "w-[520px]"
 		},
 		{
 			panel: "sort",
 			icon: /* @__PURE__ */ l(p, { className: "size-4" }),
-			label: e("aiTable.toolbar.sort"),
-			summary: pt(a.sorts, r),
+			label: n("aiTable.toolbar.sort"),
+			summary: pt(s.sorts, a),
 			content: /* @__PURE__ */ l(cr, {}),
 			width: "w-[620px]"
 		},
 		{
 			panel: "color",
 			icon: /* @__PURE__ */ l(re, { className: "size-4" }),
-			label: e("aiTable.toolbar.color"),
-			summary: _t(a.colorRules),
+			label: n("aiTable.toolbar.color"),
+			summary: _t(s.colorRules),
 			content: /* @__PURE__ */ l(zn, {}),
 			width: "w-[700px]"
 		},
 		{
 			panel: "aiField",
 			icon: /* @__PURE__ */ l(L, { className: "size-4" }),
-			label: e("aiTable.toolbar.addField"),
+			label: n("aiTable.toolbar.addField"),
 			content: /* @__PURE__ */ l(Qn, {}),
 			width: "w-[540px]"
 		}
@@ -4376,24 +4376,38 @@ function ur() {
 	return /* @__PURE__ */ u("div", {
 		className: "flex min-w-0 items-center gap-1",
 		children: [
+			t > 0 ? /* @__PURE__ */ l("span", {
+				className: "mr-2 whitespace-nowrap text-xs font-medium text-description",
+				children: n("wms.selectedCount", { count: t })
+			}) : null,
 			/* @__PURE__ */ u("div", {
 				className: "mr-2 flex items-center gap-1.5 whitespace-nowrap text-xs font-medium text-description",
-				children: [/* @__PURE__ */ l(z, { className: "size-4 text-primary" }), e("aiTable.toolbar.savedView")]
+				children: [/* @__PURE__ */ l(z, { className: "size-4 text-primary" }), n("aiTable.toolbar.savedView")]
 			}),
-			s.map((e) => /* @__PURE__ */ l(dr, {
+			d.map((e) => /* @__PURE__ */ l(dr, {
 				...e,
-				activePanel: t.activePanel,
-				setActivePanel: n
+				activePanel: r.activePanel,
+				setActivePanel: i
 			}, e.panel)),
 			/* @__PURE__ */ u(Q, {
 				type: "button",
-				"aria-label": e("aiTable.toolbar.restoreDefault", "恢复默认视图"),
-				title: e("aiTable.toolbar.restoreDefault", "恢复默认视图"),
+				"aria-label": n("aiTable.toolbar.restoreDefault", "恢复默认视图"),
+				title: n("aiTable.toolbar.restoreDefault", "恢复默认视图"),
 				variant: "ghost",
 				size: "sm",
 				className: "h-8 gap-1.5 whitespace-nowrap px-3 text-xs text-description",
-				onClick: i,
-				children: [/* @__PURE__ */ l(R, { className: "size-4" }), e("aiTable.toolbar.restoreDefault", "恢复默认视图")]
+				onClick: o,
+				children: [/* @__PURE__ */ l(R, { className: "size-4" }), n("aiTable.toolbar.restoreDefault", "恢复默认视图")]
+			}),
+			/* @__PURE__ */ u(Q, {
+				type: "button",
+				"aria-label": n("wms.columnSettings.title", "列设置"),
+				title: n("wms.columnSettings.title", "列设置"),
+				variant: "ghost",
+				size: "sm",
+				className: "h-8 gap-1.5 whitespace-nowrap px-3 text-xs text-description",
+				onClick: e,
+				children: [/* @__PURE__ */ l(ae, { className: "size-4" }), n("wms.columnSettings.title", "列设置")]
 			})
 		]
 	});
@@ -5514,7 +5528,7 @@ function Zr({ columns: e, data: t, total: r, page: i, pageSize: a, onPageChange:
 		St,
 		M,
 		Ct
-	] }), Tt = !!(xt || yt || bt || St || M || Ct);
+	] }), Tt = !!(yt || bt || St || M || Ct || !de && xt);
 	return /* @__PURE__ */ u("div", {
 		className: "flex w-full flex-col gap-0",
 		children: [
@@ -5524,7 +5538,7 @@ function Zr({ columns: e, data: t, total: r, page: i, pageSize: a, onPageChange:
 				className: "flex items-center justify-between gap-4 overflow-x-auto px-4 py-2.5 lg:px-6",
 				children: [/* @__PURE__ */ l("div", {
 					className: "flex min-w-max items-center gap-2",
-					children: typeof de == "function" ? de({ openColumnSettings: () => Se(!0) }) : de
+					children: typeof de == "function" ? de({ openColumnSettings: () => Se(!0), selectedCount: we }) : de
 				}), fe ? /* @__PURE__ */ l("div", {
 					className: "flex min-w-max items-center gap-2",
 					children: fe
@@ -5536,7 +5550,6 @@ function Zr({ columns: e, data: t, total: r, page: i, pageSize: a, onPageChange:
 				children: [/* @__PURE__ */ u("div", {
 					className: "flex min-w-max items-center gap-3",
 					children: [
-						xt,
 						yt,
 						bt
 					]
@@ -6011,9 +6024,9 @@ function Qr({ columns: e, tableProps: t, showScopeNote: r = !0, clientPagination
 		minFrozenColumnCount: 1,
 		columnSettings: t.columnSettings,
 		onColumnSettingsStateChange: t.columnSettings ? re : void 0,
-		viewToolbar: /* @__PURE__ */ l(ur, {}),
+		viewToolbar: ({ openColumnSettings: e, selectedCount: t }) => /* @__PURE__ */ l(ur, { openColumnSettings: e, selectedCount: t }),
 		viewStatus: /* @__PURE__ */ l(pr, {}),
-		showColumnControls: !0,
+		showColumnControls: !1,
 		scopeNote: r ? /* @__PURE__ */ l("span", { children: a("aiTable.dataView.scopeNote", {
 			filtered: p.length,
 			total: _

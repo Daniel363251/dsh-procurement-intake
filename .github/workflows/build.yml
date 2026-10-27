@@ -20,8 +20,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build plugin client
+      - name: Build plugin
         run: npm run build
 
-      - name: Check committed client bundle
-        run: git diff --exit-code -- client.js
+      - name: Check committed build artifacts
+        run: git diff --exit-code -- client.js dist/

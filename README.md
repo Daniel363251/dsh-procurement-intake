@@ -179,26 +179,28 @@ Typert 远程协议（/api/procurement/*）
 
 ## 构建与安装
 
+仓库会提交可直接加载的 `client.js` 和 `dist/` 宿主构建产物。只把克隆目录链接进 Harness 时，不需要在插件目录单独安装 `zod` 或 `xlsx`；宿主构建已经把这些运行时依赖打包进去，Harness 仍提供 `@deepseek-ai/dsh-*` peer 依赖。
+
+修改源码并重新构建时：
+
 ```sh
 cd plugins/dsh-procurement-intake
-npm install
-npm run build          # esbuild 打包 client.source.cjs 及 src/client/ → client.js
+npm ci
+npm run build          # 构建 dist/ 宿主入口、Typert schema 和 client.js
 ```
 
 然后用 Harness 的插件管理器把该目录作为 bundle 安装（`plugin_manager install_bundle` 指向本目录，等价于将 `@hilda-biz/dsh-procurement-intake` 链接进当前 profile）。安装后刷新页面即可；修改宿主侧（`index.js` / `remote-def.js`）或客户端后需重新 `remove_bundle` + `install_bundle`（或重启 Harness）并刷新页面。
 
 ## 从 GitHub 安装（给新用户）
 
-发布到 GitHub 时，仓库需包含：所有宿主/客户端源码、`client.js`、`vendor/ai-table/`、`package.json`、`package-lock.json`（`node_modules/` 已由 `.gitignore` 排除）。新用户按以下步骤即可运行：
+发布到 GitHub 时，仓库需包含：所有宿主/客户端源码、`client.js`、`dist/`、`vendor/ai-table/`、`package.json`、`package-lock.json`（`node_modules/` 已由 `.gitignore` 排除）。新用户按以下步骤即可运行：
 
 ```sh
 git clone <仓库地址>
 cd dsh-procurement-intake
-npm install        # 从公共 npm 拉取 @deepseek-ai/dsh-*、xlsx、date-fns 等依赖
-npm run build      # 重打 client.js（若仓库已提交 client.js 可跳过）
 ```
 
-然后在 Harness 里用插件管理器 `install_bundle` 指向该目录并刷新页面。
+然后在 Harness 里用插件管理器 `install_bundle` 指向该目录并刷新页面。仓库提交的构建产物不依赖插件目录的 `node_modules`；需要自行修改源码时，再运行 `npm ci && npm run build`。
 
 **版本要求**：`@deepseek-ai/dsh-*` 以 peer 依赖声明（由宿主 DSH 提供，插件不再自带副本），`engines.dsh` 为 `>=0.2.1-rc.1 <0.3.0`。用户的 Harness 在 0.2.x（≥0.2.1-rc.1）范围内即可，超出范围会在安装/激活阶段被拦截。
 

@@ -1,4 +1,4 @@
-import { $remote } from './remote-def.js'
+import { $remote } from './dist/remote-def.js'
 
 export const TYPERT = {
   package: '@hilda-biz/dsh-procurement-intake',

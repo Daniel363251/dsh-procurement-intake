@@ -1,2 +1,2 @@
-export { default } from './src/host/index.js'
-export * from './src/host/index.js'
+export { default } from './dist/index.js'
+export * from './dist/index.js'
