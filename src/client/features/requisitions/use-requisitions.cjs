@@ -26,6 +26,9 @@ function useRequisitions({ data, t, setError, setSuccess }) {
   const [mineSelected, setMineSelected] = React.useState(new Set())
   const [shipDate, setShipDate] = React.useState(undefined)
   const [shipDialogOpen, setShipDialogOpen] = React.useState(false)
+  const [batchNotesDialogOpen, setBatchNotesDialogOpen] = React.useState(false)
+  const [batchNotesDraft, setBatchNotesDraft] = React.useState('')
+  const [savingBatchNotes, setSavingBatchNotes] = React.useState(false)
   const [supplierDialogOpen, setSupplierDialogOpen] = React.useState(false)
   const [batchSupplierDraft, setBatchSupplierDraft] = React.useState('')
   const [savingBatchSupplier, setSavingBatchSupplier] = React.useState(false)
@@ -229,6 +232,24 @@ function useRequisitions({ data, t, setError, setSuccess }) {
       setSavingBatchSupplier(false)
     }
   }
+  async function applyNotesToSelected() {
+    if (!mineSelected.size || savingBatchNotes) return
+    const ids = [...mineSelected]
+    setSavingBatchNotes(true)
+    setError('')
+    try {
+      for (const id of ids) await data.updateLine(id, { notes: batchNotesDraft })
+      setBatchNotesDialogOpen(false)
+      setBatchNotesDraft('')
+      setMineSelected(new Set())
+      setSuccess(t('batchNotesSaved').replace('{count}', String(ids.length)))
+      await loadPage('mine', minePage, minePageSize)
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : t('saveError'))
+    } finally {
+      setSavingBatchNotes(false)
+    }
+  }
   async function deleteSelected() {
     if (!mineSelected.size) return
     if (!window.confirm(t('deleteConfirm'))) return
@@ -279,9 +300,16 @@ function useRequisitions({ data, t, setError, setSuccess }) {
     setShipDate,
     shipDialogOpen,
     setShipDialogOpen,
+    batchNotesDialogOpen,
+    setBatchNotesDialogOpen,
+    batchNotesDraft,
+    setBatchNotesDraft,
+    savingBatchNotes,
+    applyNotesToSelected,
     supplierDialogOpen,
     setSupplierDialogOpen,
     batchSupplierDraft,
+    setBatchSupplierDraft,
     savingBatchSupplier,
     detailRow,
     setDetailRow,

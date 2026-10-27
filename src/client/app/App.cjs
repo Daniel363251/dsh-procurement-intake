@@ -114,7 +114,9 @@ function IntakeBody({ t, data, sessionId }) {
     pendingPageSize, minePageSize, pendingLoading, mineLoading, query, setQuery, fileName,
     sheets, sheetIndex, setSheetIndex, selected, setSelected, toggle, parsing, importing, dragActive,
     setDragActive, mineSelected, setMineSelected, toggleMine, shipDate, setShipDate, shipDialogOpen,
-    setShipDialogOpen, supplierDialogOpen, setSupplierDialogOpen, batchSupplierDraft,
+    setShipDialogOpen, batchNotesDialogOpen, setBatchNotesDialogOpen, batchNotesDraft,
+    setBatchNotesDraft, savingBatchNotes, applyNotesToSelected,
+    supplierDialogOpen, setSupplierDialogOpen, batchSupplierDraft,
     setBatchSupplierDraft, savingBatchSupplier, detailDialogOverlayRef, detailRow, setDetailRow,
     detailDraft, setDetailDraft, savingDetail, fileInputRef, listRequestIds, keywordRef,
     previousKeyword, pendingTableQuery, mineTableQuery, words, sheet, pending, mine, candidates,
@@ -200,7 +202,8 @@ function IntakeBody({ t, data, sessionId }) {
     t, aiAdapter, pending, query, words, store, selected, setSelected, toggle, candidates, pendingLoading, pendingPage,
     pendingPageSize, refreshTable, tableRefreshButton, changePage, changePageSize, updateTableQuery,
     PENDING_QUERY_FIELD_IDS, emptyStateContent, mine, mineSelected, setMineSelected, toggleMine,
-    MINE_COLUMN_SETTINGS_KEY, MINE_QUERY_FIELD_IDS, setBatchSupplierDraft, setSupplierDialogOpen,
+    MINE_COLUMN_SETTINGS_KEY, MINE_QUERY_FIELD_IDS, setBatchNotesDraft, setBatchNotesDialogOpen,
+    setBatchSupplierDraft, setSupplierDialogOpen,
     setShipDialogOpen, deleteSelected, deleteOwned, openDetails, mineLoading, minePage, minePageSize, copyCell, qty, formatDateTime,
   })
 
@@ -241,11 +244,13 @@ function IntakeBody({ t, data, sessionId }) {
     openWorkspaceRecord, navigateWorkspaceMetric,
   })
 
-  const { detailDialog, shipDialog, supplierDialog } = renderRequisitionDialogs({
+  const { detailDialog, shipDialog, supplierDialog, batchNotesDialog } = renderRequisitionDialogs({
     t, detailDialogOverlayRef, detailRow, detailDraft, savingDetail, setDetailRow, setDetailDraft,
     saveDetails, detailValue, copyCell, qty, formatDateTime, shipDialogOpen, setShipDialogOpen,
     mineSelected, shipDate, setShipDate, applyShipToSelected, supplierDialogOpen, savingBatchSupplier,
     setSupplierDialogOpen, batchSupplierDraft, setBatchSupplierDraft, applySupplierToSelected,
+    batchNotesDialogOpen, setBatchNotesDialogOpen, batchNotesDraft, setBatchNotesDraft,
+    savingBatchNotes, applyNotesToSelected,
   })
   const orderDetailDialog = renderOrderDetailDialog({
     t, orderDetailRow, orderDetailDraft, editingOrderDetails, savingOrderDetails, setOrderDetailRow,
@@ -266,7 +271,7 @@ function IntakeBody({ t, data, sessionId }) {
     menu === 'requests' && h('nav', { className: 'pi-tabs', 'aria-label': t('requests') }, ...[['intake', `${t('pendingTab')} · ${store.pendingTotal}`], ['mine', `${t('mineTab')} · ${store.mineTotal}`]].map(([key, label]) => h('button', { key, type: 'button', className: 'pi-tab', onClick: () => setRequestView(key), 'aria-pressed': requestView === key }, label))),
     menu === 'orders' && h('nav', { className: 'pi-tabs', 'aria-label': t('ordersMenu') }, ...[['import', t('orderImportTab')], ['manage', `${t('orderManageTab')} · ${orderCount}`]].map(([key, label]) => h('button', { key, type: 'button', className: 'pi-tab', onClick: () => setOrderView(key), 'aria-pressed': orderView === key }, label))),
     ...getRouteContent({ menu, requestView, views: { uploadSection, previewSection, searchSection, batchSection, candidateSection, mineSection, orderSection, settingsSection, masterDataSection, dashboardSection, placeholder } }),
-    h('p', { className: 'pi-footer' }, t('localStorageNote'))), shipDialog, detailDialog, orderDetailDialog, supplierDialog, masterDataEditDrawer, dashboardTodoDialog)
+    h('p', { className: 'pi-footer' }, t('localStorageNote'))), shipDialog, detailDialog, orderDetailDialog, supplierDialog, batchNotesDialog, masterDataEditDrawer, dashboardTodoDialog)
 }
 
 module.exports = { IntakeErrorBoundary, IntakeBody, PluginGuideIcon }

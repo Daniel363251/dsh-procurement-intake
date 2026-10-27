@@ -7,6 +7,8 @@ function renderRequisitionDialogs({
   saveDetails, detailValue, copyCell, qty, formatDateTime, shipDialogOpen, setShipDialogOpen,
   mineSelected, shipDate, setShipDate, applyShipToSelected, supplierDialogOpen, savingBatchSupplier,
   setSupplierDialogOpen, batchSupplierDraft, setBatchSupplierDraft, applySupplierToSelected,
+  batchNotesDialogOpen, setBatchNotesDialogOpen, batchNotesDraft, setBatchNotesDraft,
+  savingBatchNotes, applyNotesToSelected,
 }) {
   const detailDialog = detailRow && detailDraft && h('div', { ref: detailDialogOverlayRef, className: 'pi-drawer-overlay', onClick: event => { if (event.target === event.currentTarget && !savingDetail) setDetailRow(null) } },
     h('div', { className: 'pi-drawer-panel pi-detail-dialog', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('detailTitle') },
@@ -54,7 +56,17 @@ function renderRequisitionDialogs({
         h('button', { type: 'button', className: 'pi-button pi-button--small', disabled: savingBatchSupplier, onClick: () => setSupplierDialogOpen(false) }, t('close')),
         h('button', { type: 'button', className: 'pi-button pi-button--small pi-button--primary', style: { width: 'auto' }, disabled: !batchSupplierDraft.trim() || savingBatchSupplier, onClick: applySupplierToSelected }, savingBatchSupplier ? t('saving') : t('batchSupplier')))));
 
-  return { detailDialog, shipDialog, supplierDialog }
+  const batchNotesDialog = batchNotesDialogOpen && h('div', { className: 'pi-dialog-overlay', onClick: event => { if (event.target === event.currentTarget && !savingBatchNotes) setBatchNotesDialogOpen(false) } },
+    h('div', { className: 'pi-dialog-panel', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('batchNotes') },
+      h('h3', { className: 'pi-dialog-title' }, t('batchNotes')),
+      h('p', { className: 'pi-dialog-description' }, t('batchNotesConfirm').replace('{count}', String(mineSelected.size))),
+      h('label', { className: 'pi-detail-field', style: { marginTop: 16 } }, h('span', null, t('notes')),
+        h('textarea', { className: 'pi-detail-textarea', rows: 4, value: batchNotesDraft, disabled: savingBatchNotes, autoFocus: true, placeholder: t('batchNotesPlaceholder'), onChange: event => setBatchNotesDraft(event.target.value) })),
+      h('div', { className: 'pi-dialog-actions' },
+        h('button', { type: 'button', className: 'pi-button pi-button--small', disabled: savingBatchNotes, onClick: () => setBatchNotesDialogOpen(false) }, t('close')),
+        h('button', { type: 'button', className: 'pi-button pi-button--small pi-button--primary', style: { width: 'auto' }, disabled: savingBatchNotes, onClick: applyNotesToSelected }, savingBatchNotes ? t('saving') : t('batchNotes')))));
+
+  return { detailDialog, shipDialog, supplierDialog, batchNotesDialog }
 }
 
 module.exports = { renderRequisitionDialogs }

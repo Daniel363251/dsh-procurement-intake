@@ -9,7 +9,7 @@ function useRequisitionTableViews({
   pendingLoading, pendingPage, pendingPageSize, refreshTable, tableRefreshButton, changePage,
   changePageSize, updateTableQuery, PENDING_QUERY_FIELD_IDS, emptyStateContent, openDetails, deleteOwned,
   mine, mineSelected, setMineSelected, toggleMine, MINE_COLUMN_SETTINGS_KEY, MINE_QUERY_FIELD_IDS,
-  setBatchSupplierDraft, setSupplierDialogOpen, setShipDialogOpen, deleteSelected, mineLoading, minePage,
+  setBatchNotesDraft, setBatchNotesDialogOpen, setBatchSupplierDraft, setSupplierDialogOpen, setShipDialogOpen, deleteSelected, mineLoading, minePage,
   minePageSize, copyCell, qty, formatDateTime,
 }) {
   const pendingDefinition = React.useMemo(() => defineAITable({
@@ -98,6 +98,7 @@ function useRequisitionTableViews({
       h('div', { className: 'pi-batch-bar' },
         h('button', { type: 'button', className: 'pi-button pi-button--small pi-button--primary', style: { width: 'auto' }, disabled: !mineSelected.size, onClick: () => setShipDialogOpen(true) }, CALENDAR_ICON, `批量更新发货日期${mineSelected.size ? ` (${mineSelected.size})` : ''}`),
         h('button', { type: 'button', className: 'pi-button pi-button--small', disabled: !mineSelected.size, onClick: () => { setBatchSupplierDraft(''); setSupplierDialogOpen(true) } }, t('batchSupplier')),
+        h('button', { type: 'button', className: 'pi-button pi-button--small', disabled: !mineSelected.size, onClick: () => { setBatchNotesDraft(''); setBatchNotesDialogOpen(true) } }, t('batchNotes')),
         h('button', { type: 'button', className: 'pi-button pi-button--small pi-button--danger', disabled: !mineSelected.size, onClick: deleteSelected }, TRASH_ICON, `删除所选${mineSelected.size ? ` ${mineSelected.size} 条` : ''}`),
         tableRefreshButton(() => refreshTable('mine'), mineLoading)),
       h(AIDataTable, {
