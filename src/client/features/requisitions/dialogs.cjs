@@ -1,5 +1,6 @@
 const React = require('react')
 const { DatePicker } = require('../../components/presentation.cjs')
+const { SupplierPicker } = require('../../components/supplier-picker.cjs')
 const h = React.createElement
 
 function renderRequisitionDialogs({
@@ -8,7 +9,7 @@ function renderRequisitionDialogs({
   mineSelected, shipDate, setShipDate, applyShipToSelected, supplierDialogOpen, savingBatchSupplier,
   setSupplierDialogOpen, batchSupplierDraft, setBatchSupplierDraft, applySupplierToSelected,
   batchNotesDialogOpen, setBatchNotesDialogOpen, batchNotesDraft, setBatchNotesDraft,
-  savingBatchNotes, applyNotesToSelected,
+  savingBatchNotes, applyNotesToSelected, data,
 }) {
   const detailDialog = detailRow && detailDraft && h('div', { ref: detailDialogOverlayRef, className: 'pi-drawer-overlay', onClick: event => { if (event.target === event.currentTarget && !savingDetail) setDetailRow(null) } },
     h('div', { className: 'pi-drawer-panel pi-detail-dialog', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('detailTitle') },
@@ -27,7 +28,7 @@ function renderRequisitionDialogs({
           detailValue(t('importedAt'), formatDateTime(detailRow.importedAt)))),
       h('section', { className: 'pi-detail-section' }, h('h4', { className: 'pi-detail-section-title' }, t('followupSection')),
         h('div', { className: 'pi-detail-form' },
-          h('label', { className: 'pi-detail-field' }, h('span', null, t('supplier')), h('input', { className: 'pi-input pi-detail-input', type: 'text', value: detailDraft.supplier, disabled: savingDetail, placeholder: t('supplierPlaceholder'), onChange: event => setDetailDraft(current => ({ ...current, supplier: event.target.value })) })),
+          h('label', { className: 'pi-detail-field' }, h('span', null, t('supplier')), h(SupplierPicker, { data, t, value: detailDraft.supplier, disabled: savingDetail, placeholder: t('supplierPlaceholder'), onChange: supplier => setDetailDraft(current => ({ ...current, supplier })) })),
           h('label', { className: 'pi-detail-field' }, h('span', null, t('expectedShip')), h('input', { className: 'pi-input pi-detail-input', type: 'text', value: detailDraft.expectedShipAt, disabled: savingDetail, placeholder: 'YYYY-MM-DD / 10月10日左右', onChange: event => setDetailDraft(current => ({ ...current, expectedShipAt: event.target.value })) })),
           h('label', { className: 'pi-detail-field' }, h('span', null, t('nextAction')), h('textarea', { className: 'pi-detail-textarea', rows: 2, value: detailDraft.nextAction, disabled: savingDetail, onChange: event => setDetailDraft(current => ({ ...current, nextAction: event.target.value })) })),
           h('label', { className: 'pi-detail-field' }, h('span', null, t('waitingOn')), h('textarea', { className: 'pi-detail-textarea', rows: 2, value: detailDraft.waitingOn, disabled: savingDetail, onChange: event => setDetailDraft(current => ({ ...current, waitingOn: event.target.value })) })),
@@ -51,7 +52,7 @@ function renderRequisitionDialogs({
       h('h3', { className: 'pi-dialog-title' }, t('batchSupplier')),
       h('p', { className: 'pi-dialog-description' }, t('batchSupplierConfirm').replace('{count}', String(mineSelected.size))),
       h('label', { className: 'pi-detail-field', style: { marginTop: 16 } }, h('span', null, t('supplier')),
-        h('input', { className: 'pi-input', type: 'text', value: batchSupplierDraft, autoFocus: true, placeholder: t('supplierPlaceholder'), onChange: event => setBatchSupplierDraft(event.target.value) })),
+        h(SupplierPicker, { data, t, value: batchSupplierDraft, placeholder: t('supplierPlaceholder'), autoFocus: true, onChange: setBatchSupplierDraft })),
       h('div', { className: 'pi-dialog-actions' },
         h('button', { type: 'button', className: 'pi-button pi-button--small', disabled: savingBatchSupplier, onClick: () => setSupplierDialogOpen(false) }, t('close')),
         h('button', { type: 'button', className: 'pi-button pi-button--small pi-button--primary', style: { width: 'auto' }, disabled: !batchSupplierDraft.trim() || savingBatchSupplier, onClick: applySupplierToSelected }, savingBatchSupplier ? t('saving') : t('batchSupplier')))));

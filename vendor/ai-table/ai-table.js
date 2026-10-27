@@ -6013,7 +6013,7 @@ function Qr({ columns: e, tableProps: t, showScopeNote: r = !0, clientPagination
 		onColumnSettingsStateChange: t.columnSettings ? re : void 0,
 		viewToolbar: /* @__PURE__ */ l(ur, {}),
 		viewStatus: /* @__PURE__ */ l(pr, {}),
-		showColumnControls: !1,
+		showColumnControls: !0,
 		scopeNote: r ? /* @__PURE__ */ l("span", { children: a("aiTable.dataView.scopeNote", {
 			filtered: p.length,
 			total: _

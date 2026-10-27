@@ -250,7 +250,7 @@ function IntakeBody({ t, data, sessionId }) {
     mineSelected, shipDate, setShipDate, applyShipToSelected, supplierDialogOpen, savingBatchSupplier,
     setSupplierDialogOpen, batchSupplierDraft, setBatchSupplierDraft, applySupplierToSelected,
     batchNotesDialogOpen, setBatchNotesDialogOpen, batchNotesDraft, setBatchNotesDraft,
-    savingBatchNotes, applyNotesToSelected,
+    savingBatchNotes, applyNotesToSelected, data,
   })
   const orderDetailDialog = renderOrderDetailDialog({
     t, orderDetailRow, orderDetailDraft, editingOrderDetails, savingOrderDetails, setOrderDetailRow,
