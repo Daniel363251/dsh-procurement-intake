@@ -6,7 +6,7 @@ const zh = {
   columnsRecognized: '列已识别', importPool: '导入待筛选池', importing: '正在导入待筛选池…', saveError: '保存失败，请检查浏览器可用空间后重试。', latestImport: '最近导入',
   keywordLabel: '物料名称关键词', keywordPlaceholder: '例如：PDA 电池，扫码枪', candidates: '候选明细', selectAll: '全选当前表格中的明细', review: '待复核',
   noCandidates: '暂无待筛选明细。先导入 NC 请购单。', claimSelected: '认领为我的需求', myRequests: '我的采购需求', noMine: '尚未认领采购需求。',
-  localStorageNote: '文件在浏览器解析；数据保存在 Harness 后台，与 AI 共用同一份。', requisitionNo: '请购单', material: '物料名称',
+  requisitionNo: '请购单', material: '物料名称',
   copy: '复制', copySuccess: '复制成功', copyFailed: '复制失败，请重试。',
   duplicateIdentity: '同一文件中存在重复的请购明细标识，请复核', expectedShip: '预计发货日期', rowName: '未命名列{index}', quantity: '数量', lineNo: 'NC明细行', procurementOrg: '采购组织',
   drop: '拖放 NC 导出文件到这里', select: '浏览文件', parsing: '正在解析工作簿…', parseHelp: '请购单号和物料名称列会自动识别', fileHelp: '支持 .xls / .xlsx · 最多 20 MB',
@@ -25,7 +25,7 @@ const en = {
   columnsRecognized: 'columns recognized', importPool: 'Import to review pool', importing: 'Importing to the review pool…', saveError: 'Could not save. Check available browser storage and try again.', latestImport: 'Latest import',
   keywordLabel: 'Material name keywords', keywordPlaceholder: 'For example: PDA battery, scanner', candidates: 'Candidate lines', selectAll: 'Select all rows in the table', review: 'Review',
   noCandidates: 'No lines to review. Import an NC requisition file first.', claimSelected: 'Claim as my request', myRequests: 'My procurement requests', noMine: 'You have not claimed any requests yet.',
-  localStorageNote: 'Files are parsed in the browser. Data is stored in the Harness backend and shared with the AI.', requisitionNo: 'Requisition', material: 'Material name',
+  requisitionNo: 'Requisition', material: 'Material name',
   copy: 'Copy', copySuccess: 'Copied', copyFailed: 'Could not copy. Try again.',
   duplicateIdentity: 'Duplicate requisition line identity in this file; review it.', expectedShip: 'Expected ship date', rowName: 'Unnamed column {index}', quantity: 'Quantity', lineNo: 'NC line', procurementOrg: 'Procurement organization',
   drop: 'Drop an NC export here', select: 'Browse files', parsing: 'Parsing workbook…', parseHelp: 'Requisition number and material name are detected automatically', fileHelp: 'XLS / XLSX · up to 20 MB',
@@ -61,5 +61,7 @@ Object.assign(zh, { editOrderInfo: '编辑订单信息', saveOrderInfo: '保存�
 Object.assign(en, { editOrderInfo: 'Edit order information', saveOrderInfo: 'Save order information', orderInfoSaved: 'Order information saved', discardChanges: 'Discard changes', noOperationHistory: 'No operation history yet.', requisitionNumbersReadOnly: 'Requisition numbers are derived from the order items.' })
 Object.assign(zh, { supplierLoading: '正在读取供应商主数据…', supplierNoMatches: '没有匹配的供应商', supplierAddOption: '新增“{name}”并加入供应商主数据', supplierAddError: '新增供应商失败，请重试。', supplierClear: '清空供应商' })
 Object.assign(en, { supplierLoading: 'Loading suppliers…', supplierNoMatches: 'No matching suppliers', supplierAddOption: 'Add “{name}” to supplier master data', supplierAddError: 'Could not add supplier. Try again.', supplierClear: 'Clear supplier' })
+Object.assign(zh, { anomalyFocus: '异常关注点', materialDisabled: '物料停用', supplierDisabled: '供应商停用', categoryDisabled: '类目停用' })
+Object.assign(en, { anomalyFocus: 'Attention', materialDisabled: 'Material disabled', supplierDisabled: 'Supplier disabled', categoryDisabled: 'Category disabled' })
 
 module.exports = { zh, en }

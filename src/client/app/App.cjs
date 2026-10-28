@@ -1,7 +1,7 @@
 const React = require('react')
 const { RefreshCw, Copy, LayoutDashboard, ClipboardList, PackageCheck, TriangleAlert, Settings2, Database } = require('lucide-react')
 const h = React.createElement
-const { aiTableCSS, hildaUiCSS, copyCellCSS, masterDataCSS, hoverTooltipCSS, tableStickyCSS, interactionFixCSS, workspaceCSS, orderLayoutCSS, css } = require('../styles.cjs')
+const { aiTableCSS, hildaUiCSS, copyCellCSS, masterDataCSS, hoverTooltipCSS, tableStickyCSS, interactionFixCSS, anomalyTableCSS, workspaceCSS, orderLayoutCSS, css } = require('../styles.cjs')
 function text(value) { return value == null ? '' : String(value).trim() }
 function normalize(value) { return text(value).replace(/[\s\u00a0]/g, '').toLowerCase() }
 const EMPTY_STATE_IMAGE = __EMPTY_STATE_IMAGE__
@@ -257,7 +257,7 @@ function IntakeBody({ t, data, sessionId }) {
     setOrderDetailDraft, setEditingOrderDetails, saveOrderDetails, selectPortalRef, detailValue,
     formatDateTime, copyCell, uniqueOrderItemValues, orderDraftFrom,
   })
-  return h('main', { ref: selectPortalRef, className: 'pc-intake' }, h('style', null, css + hildaUiCSS + aiTableCSS + copyCellCSS + masterDataCSS + hoverTooltipCSS + workspaceCSS + tableStickyCSS + interactionFixCSS + orderLayoutCSS), h('div', { className: 'pi-stack' },
+  return h('main', { ref: selectPortalRef, className: 'pc-intake' }, h('style', null, css + hildaUiCSS + aiTableCSS + copyCellCSS + masterDataCSS + hoverTooltipCSS + workspaceCSS + tableStickyCSS + interactionFixCSS + anomalyTableCSS + orderLayoutCSS), h('div', { className: 'pi-stack' },
     h('nav', { className: 'pi-menu', 'aria-label': t('category') }, ...[
       ['workspace', t('workspace'), LayoutDashboard], ['requests', t('requests'), ClipboardList],
       ['orders', t('ordersMenu'), PackageCheck], ['issues', t('issues'), TriangleAlert],
@@ -270,8 +270,7 @@ function IntakeBody({ t, data, sessionId }) {
     error && h('p', { className: 'pi-error', role: 'alert' }, error),
     menu === 'requests' && h('nav', { className: 'pi-tabs', 'aria-label': t('requests') }, ...[['intake', `${t('pendingTab')} · ${store.pendingTotal}`], ['mine', `${t('mineTab')} · ${store.mineTotal}`]].map(([key, label]) => h('button', { key, type: 'button', className: 'pi-tab', onClick: () => setRequestView(key), 'aria-pressed': requestView === key }, label))),
     menu === 'orders' && h('nav', { className: 'pi-tabs', 'aria-label': t('ordersMenu') }, ...[['import', t('orderImportTab')], ['manage', `${t('orderManageTab')} · ${orderCount}`]].map(([key, label]) => h('button', { key, type: 'button', className: 'pi-tab', onClick: () => setOrderView(key), 'aria-pressed': orderView === key }, label))),
-    ...getRouteContent({ menu, requestView, views: { uploadSection, previewSection, searchSection, batchSection, candidateSection, mineSection, orderSection, settingsSection, masterDataSection, dashboardSection, placeholder } }),
-    h('p', { className: 'pi-footer' }, t('localStorageNote'))), shipDialog, detailDialog, orderDetailDialog, supplierDialog, batchNotesDialog, masterDataEditDrawer, dashboardTodoDialog)
+    ...getRouteContent({ menu, requestView, views: { uploadSection, previewSection, searchSection, batchSection, candidateSection, mineSection, orderSection, settingsSection, masterDataSection, dashboardSection, placeholder } })), shipDialog, detailDialog, orderDetailDialog, supplierDialog, batchNotesDialog, masterDataEditDrawer, dashboardTodoDialog)
 }
 
 module.exports = { IntakeErrorBoundary, IntakeBody, PluginGuideIcon }

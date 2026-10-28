@@ -26,6 +26,35 @@ function createProcurementService(domain) {
   }
   const masterId = (type, key) => `${type}:${Buffer.from(key).toString('base64url')}`
 
+  function masterStatus(type, value) {
+    if (!value) return ''
+    const key = masterKey(type, value)
+    return masterTable(type).get(masterId(type, key))?.status || ''
+  }
+
+  function requisitionAnomalyFocus(row) {
+    const focus = []
+    const materialStatus = masterStatus('materials', {
+      code: row.materialCode, name: row.materialName,
+      specification: [row.specification, row.model].filter(Boolean).join(' · '),
+    })
+    if (materialStatus === 'disabled') focus.push('materialDisabled')
+    if (masterStatus('suppliers', { name: row.supplier }) === 'disabled') focus.push('supplierDisabled')
+    const category = row.materialCategory || row.sourceFields?.['物料分类'] || row.sourceFields?.['物料类别']
+    if (masterStatus('materialCategories', { name: category }) === 'disabled') focus.push('categoryDisabled')
+    return [...new Set(focus)]
+  }
+
+  function orderAnomalyFocus(order) {
+    const focus = []
+    if (masterStatus('suppliers', { name: order.supplier }) === 'disabled') focus.push('supplierDisabled')
+    for (const item of order.items || []) {
+      if (masterStatus('materials', { code: item.materialCode, name: item.name, specification: item.specification }) === 'disabled') focus.push('materialDisabled')
+      if (masterStatus('materialCategories', { name: item.materialCategory }) === 'disabled') focus.push('categoryDisabled')
+    }
+    return [...new Set(focus)]
+  }
+
   async function upsertImportedMaster(type, incoming) {
     const value = { ...incoming, name: String(incoming.name ?? '').trim() }
     if (!value.name) return false
@@ -156,7 +185,10 @@ function createProcurementService(domain) {
     const pageCount = Math.max(1, Math.ceil(matchingRows.length / safePageSize))
     const safePage = Math.min(pageCount, Math.max(1, Math.floor(Number(page) || 1)))
     const start = (safePage - 1) * safePageSize
-    const rows = matchingRows.slice(start, start + safePageSize)
+    const rows = matchingRows.slice(start, start + safePageSize).map(row => ({
+      ...row,
+      anomalyFocus: status === 'mine' ? requisitionAnomalyFocus(row) : [],
+    }))
     const keywordWords = String(keywords ?? '').split(keywordSplit).map((word) => word.trim().toLowerCase()).filter(Boolean)
     const pageRequisitionNos = new Set(rows.map((row) => row.requisitionNo).filter(Boolean))
     const contextRows = keywordWords.length
@@ -187,6 +219,7 @@ function createProcurementService(domain) {
       activityLog: order.activityLog || [],
       requisitionNos: purchaseOrderRequisitionNos(order),
       purchaseOrderStatus: order.purchaseOrderStatus || '待通知供应商',
+      anomalyFocus: orderAnomalyFocus(order),
     }))
     return { count: allOrders.length, page: safePage, pageSize: safePageSize, rows }
   }

@@ -67,6 +67,7 @@ function useRequisitionTableViews({
       { id: 'remainingQuantity', label: t('remainingQuantity'), type: 'number', read: row => Number(row.remainingQuantity) || 0, format: (_value, row) => row.remainingQuantity ? `${row.remainingQuantity}${row.unit ? ' ' + row.unit : ''}` : '—', width: 120 },
       { id: 'purchaseOrderNo', label: t('purchaseOrder'), type: 'text', accessor: 'purchaseOrderNo', render: value => copyCell(value, t('purchaseOrder')), width: 180 },
       { id: 'supplier', label: t('supplier'), type: 'text', accessor: 'supplier', render: value => copyCell(value, t('supplier')), width: 180 },
+      { id: 'anomalyFocus', label: t('anomalyFocus'), type: 'text', read: row => (row.anomalyFocus || []).map(key => t(key)).join('、'), render: (_value, row) => (row.anomalyFocus || []).length ? h('div', { className: 'pi-anomaly-tags' }, ...row.anomalyFocus.map(key => h('span', { key, className: 'pi-badge pi-badge--warn' }, t(key)))) : '—', width: 220 },
       { id: 'orderStatus', label: t('orderStatus'), type: 'tag', read: row => row.orderStatus || (row.isMine ? t('unmatchedPurchaseOrder') : ''), render: (_value, row) => orderStatusBadge({ ...row, orderStatus: row.orderStatus || (row.isMine ? t('unmatchedPurchaseOrder') : '') }), width: 145 },
       { id: 'demandDate', label: t('expectedDate'), type: 'date', accessor: 'demandDate', width: 120 },
       { id: 'expectedShipAt', label: t('expectedShip'), type: 'date', read: row => row.expectedShipAt || row.buyerEtaFromFile || '', width: 130 },

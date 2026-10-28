@@ -16,6 +16,7 @@ function useOrderTableViews({
       { id: 'inventoryOrg', label: t('inventoryOrg'), type: 'text', read: row => row.inventoryOrg || uniqueOrderItemValues(row, 'inventoryOrg'), width: 220 },
       { id: 'orderDate', label: t('orderDateLabel'), type: 'date', accessor: 'orderDate', width: 115 },
       { id: 'supplier', label: t('supplier'), type: 'text', accessor: 'supplier', render: value => copyCell(value, t('supplier')), width: 190 },
+      { id: 'anomalyFocus', label: t('anomalyFocus'), type: 'text', read: row => (row.anomalyFocus || []).map(key => t(key)).join('、'), render: (_value, row) => (row.anomalyFocus || []).length ? h('div', { className: 'pi-anomaly-tags' }, ...row.anomalyFocus.map(key => h('span', { key, className: 'pi-badge pi-badge--warn' }, t(key)))) : '—', width: 220 },
       { id: 'itemNames', label: t('orderItems'), type: 'text', read: row => (row.items || []).map(item => item.name).filter(Boolean).join('、'), render: value => copyCell(value, t('orderItems')), width: 260 },
       { id: 'itemCount', label: t('itemCount'), type: 'number', read: row => row.items?.length || 0, width: 90 },
       { id: 'itemQuantity', label: t('orderQuantity'), type: 'number', read: row => (row.items || []).reduce((sum, item) => sum + (Number(item.quantity) || 0), 0), width: 100 },

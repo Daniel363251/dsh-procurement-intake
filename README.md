@@ -191,6 +191,19 @@ npm run build          # 构建 dist/ 宿主入口、Typert schema 和 client.js
 
 然后用 Harness 的插件管理器把该目录作为 bundle 安装（`plugin_manager install_bundle` 指向本目录，等价于将 `@hilda-biz/dsh-procurement-intake` 链接进当前 profile）。安装后刷新页面即可；修改宿主侧（`index.js` / `remote-def.js`）或客户端后需重新 `remove_bundle` + `install_bundle`（或重启 Harness）并刷新页面。
 
+## 本地浏览器预览
+
+在插件仓库构建好产物，并确认插件已安装到要预览的 Harness profile 后，在 **DeepSeek Harness 仓库**启动 Web 开发环境（不要在插件仓库中运行 `dev:web`）：
+
+```sh
+cd /path/to/deepseek-harness
+pnpm run dev:web --no-open
+```
+
+`dev:web` 会先构建 Harness，再启动 Web 服务和客户端插件构建 watcher。服务默认监听 `http://127.0.0.1:3080/`；`--no-open` 会关闭自动打开系统浏览器，启动后可在浏览器中访问该地址。开发期间按 `Ctrl+C` 停止服务和 watcher。修改本插件源码后，先在插件仓库运行 `npm run build`，再刷新预览页面；修改宿主入口或协议后，重启 Web 开发环境以重新加载插件。
+
+本地验证使用 Node 24.18.0；Node 24.4.1 会在 watcher 启动时因模块加载 hook 报错退出。
+
 ## 从 GitHub 安装（给新用户）
 
 发布到 GitHub 时，仓库需包含：所有宿主/客户端源码、`client.js`、`dist/`、`vendor/ai-table/`、`package.json`、`package-lock.json`（`node_modules/` 已由 `.gitignore` 排除）。新用户按以下步骤即可运行：

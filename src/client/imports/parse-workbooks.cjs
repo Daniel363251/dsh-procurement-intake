@@ -57,6 +57,32 @@ function numericValue(value) {
   return match ? Number(match[0]) : null
 }
 function uniqueRowText(row) { return [...new Set(row.map(text).filter(Boolean))] }
+function cellLabel(row, aliases) {
+  const index = column(row.map(text), aliases)
+  return index < 0 ? '' : XLSX.utils.encode_cell({ r: 0, c: index }).replace(/1$/, '')
+}
+function templateSheetError(sheetName, rows, fileName) {
+  const expected = ['请购单号', '订单号', '采购组织', '物料名称']
+  let best = { index: -1, score: 0, headers: [] }
+  rows.slice(0, 30).forEach((row, index) => {
+    const headers = row.map(text)
+    const score = [
+      column(headers, ['请购单号', '请购单编号']) >= 0,
+      column(headers, ['订单号', '采购订单号', '采购订单编号']) >= 0,
+      column(headers, ['采购组织']) >= 0,
+      column(headers, ['物料名称']) >= 0,
+    ].filter(Boolean).length
+    if (score > best.score) best = { index, score, headers }
+  })
+  if (best.score > 0) {
+    const missing = expected.filter((label, index) => {
+      const aliases = [['请购单号', '请购单编号'], ['订单号', '采购订单号', '采购订单编号'], ['采购组织'], ['物料名称']][index]
+      return column(best.headers, aliases) < 0
+    })
+    return `${fileName} · 工作表“${sheetName}”第 ${best.index + 1} 行表头不完整：缺少「${missing.join('」「')}」。`
+  }
+  return ''
+}
 function valueAfterLabel(values, pattern) {
   const index = values.findIndex(value => pattern.test(value))
   if (index < 0) return ''
@@ -64,8 +90,11 @@ function valueAfterLabel(values, pattern) {
 }
 function parsePurchaseOrderWorkbook(buffer, fileName) {
   const workbook = XLSX.read(buffer, { type: 'array', cellDates: true, dense: false })
+  if (!workbook.SheetNames.length) throw new Error(`${fileName}：工作簿中没有工作表。`)
+  const sheetErrors = []
   for (const sheetName of workbook.SheetNames) {
-    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '', raw: false, blankrows: false })
+    // Keep blank rows so row indexes match the Excel row numbers shown to users.
+    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '', raw: false, blankrows: true })
     const executionHeaderIndex = rows.findIndex(row => {
       const headers = row.map(text)
       return column(headers, ['请购单号', '请购单编号']) >= 0
@@ -87,7 +116,8 @@ function parsePurchaseOrderWorkbook(buffer, fileName) {
         const orderNo = fieldWithFallbackColumn(row, headers, ['订单号', '采购订单号', '采购订单编号'], 19)
         const name = field(row, headers, ['物料名称'])
         if (orderNo && !requisitionNo) {
-          throw new Error(`第 ${index + 1} 行有订单号但没有请购单号，请检查 Excel 的 A 列。`)
+          const reqColumn = cellLabel(headers, ['请购单号', '请购单编号']) || 'A'
+          throw new Error(`${fileName} · 工作表“${sheetName}”第 ${index + 1} 行单元格 ${reqColumn}${index + 1}（请购单号）为空；该行订单号为「${orderNo}」。`)
         }
         if (!orderNo || !name) { skippedRows += 1; continue }
         const procurementOrg = field(row, headers, ['采购组织'])
@@ -160,10 +190,19 @@ function parsePurchaseOrderWorkbook(buffer, fileName) {
     }
     const orderRow = rows.findIndex(row => row.some(value => /订单编号/.test(text(value))))
     const headerRow = rows.findIndex(row => row.some(value => /序号/.test(text(value))) && row.some(value => /产品名称/.test(text(value))) && row.some(value => /^数量$/.test(text(value))))
-    if (orderRow < 0 || headerRow < 0) continue
+    if (orderRow < 0 || headerRow < 0) {
+      const detail = templateSheetError(sheetName, rows, fileName)
+      if (detail) sheetErrors.push(detail)
+      continue
+    }
     const orderNoLabelIndex = rows[orderRow].findIndex(value => /订单编号/.test(text(value)))
     const orderNo = text(rows[orderRow].slice(orderNoLabelIndex + 1).find(value => text(value)))
-    if (!orderNo) throw new Error(`订单编号缺失：${fileName}`)
+    if (!orderNo) {
+      const labelColumn = rows[orderRow].findIndex(value => /订单编号/.test(text(value)))
+      const valueColumn = rows[orderRow].slice(labelColumn + 1).findIndex(value => text(value)) + labelColumn + 1
+      const columnName = XLSX.utils.encode_cell({ r: 0, c: Math.max(0, valueColumn) }).replace(/1$/, '')
+      throw new Error(`${fileName} · 工作表“${sheetName}”第 ${orderRow + 1} 行单元格 ${columnName}${orderRow + 1}（订单编号）为空。`)
+    }
     const headers = rows[headerRow].map(text)
     const itemColumn = (pattern) => headers.findIndex(value => pattern.test(value))
     const sequenceColumn = itemColumn(/序号/), nameColumn = itemColumn(/产品名称/)
@@ -178,7 +217,7 @@ function parsePurchaseOrderWorkbook(buffer, fileName) {
       if (!name || quantity == null || !sequence || !/^\d+$/.test(sequence)) continue
       items.push({ sequence, name, specification: [...new Set(specificationColumns.map(columnIndex => text(row[columnIndex])).filter(Boolean))].join(' / '), quantity, unit: text(row[unitColumn]), taxInclusiveUnitPrice: numericValue(row[taxInclusivePriceColumn]), taxExclusiveUnitPrice: numericValue(row[taxExclusivePriceColumn]), amount: numericValue(row[amountColumn]) })
     }
-    if (!items.length) throw new Error(`没有识别到商品明细：${fileName}`)
+    if (!items.length) throw new Error(`${fileName} · 工作表“${sheetName}”第 ${headerRow + 1} 行检测到商品表头，但下方没有有效商品明细；请检查序号、产品名称和数量列。`)
     const clauses = []
     const paymentTerms = [], otherTerms = []
     let deliveryAddress = '', recipient = '', recipientPhone = '', deliveryTime = '', buyer = '', supplier = '', orderDate = ''
@@ -203,7 +242,9 @@ function parsePurchaseOrderWorkbook(buffer, fileName) {
     }
     return { orders: [{ orderNo, orderDate, buyer, supplier, taxInclusiveTotal, taxExclusiveTotal, taxRate, items, deliveryAddress, recipient, recipientPhone, deliveryTime, paymentTerms, otherTerms, clauses, sourceFileName: fileName }], skippedRows: 0 }
   }
-  throw new Error(`未识别到采购订单模板：${fileName}`)
+  throw new Error(sheetErrors.length
+    ? `未识别到采购订单模板：\n${sheetErrors.join('\n')}`
+    : `${fileName}：未识别到采购订单模板。请确认文件使用采购订单模板，并包含请购单号、订单号、采购组织和物料名称等表头。`)
 }
 
 module.exports = { parseWorkbook, parsePurchaseOrderWorkbook }
