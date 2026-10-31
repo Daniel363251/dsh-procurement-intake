@@ -219,14 +219,23 @@ cd dsh-procurement-intake
 
 ## 更新内置组件
 
-插件构建只读取当前目录中的文件。`vendor/ai-table/` 保存 AI 表格的构建产物；`vendor/hilda-ui/` 保存本插件使用的 Hilda UI 组件源码，以及 `controls.css` 中的按钮、下拉选择和提示样式副本。更新上游组件时，在上游仓库构建后将对应产物或源文件同步到这两个目录，再从插件目录重建客户端：
+AI 表格的源码在 `vendor/ai-table/src/`（TypeScript，从 `@enterprise/ai-table` fork 而来，已裁剪：移除多语言与 mock/demo 适配器，固定中文文案）。`vendor/ai-table/` 根下的 `ai-table.js` / `ai-table.css` 是它的构建产物，**不要手工修改**。
+
+两段式构建的关系：`src/` 源码经 `npm run build:ai-table`（typecheck + vite + tailwind + CSS 作用域处理）生成 `ai-table.js` / `ai-table.css`；client 构建（`npm run build`）再通过 alias 把 `@enterprise/ai-table` 解析到 `ai-table.js` 并打进 `client.js`。改了 AI 表格源码时两步都要跑；只改插件自身代码（`src/client/`）时只需要 `npm run build`。
 
 ```sh
-cd dsh-procurement-intake
-npm run build   # 使用插件目录中的 vendor 依赖重打 client.js
+# 编辑 vendor/ai-table/src/ 下的 TypeScript 源码，然后：
+npm run build:ai-table   # typecheck + vite 构建 + CSS 作用域处理，发布产物到 vendor/ai-table/ 根
+npm run build            # 重新打包 client.js
 ```
 
-上游同步步骤只在主动升级内置组件时需要；克隆本仓库后，安装依赖并构建无需主项目源码。
+> 为什么 client 构建不直接消费 `src/` 源码？① ai-table 的样式走 tailwind 4 的 CSS-first 流程（`src/styles/index.css`），必须经 vite 构建才能生成带 `.ai-table-plugin` 作用域前缀的 `ai-table.css`，esbuild 的 client 打包链做不了；② 保持「ai-table 产物 → client 消费产物」的边界，AI 表格可以独立 typecheck、独立构建、独立验证。
+
+文案统一维护在 `vendor/ai-table/src/i18n/locales/zh-CN.json`；新增界面文案时在对应组件里用 `t('key', '中文默认值')`。
+
+`vendor/hilda-ui/` 保存本插件使用的 Hilda UI 组件源码，以及 `controls.css` 中的按钮、下拉选择和提示样式副本；更新时直接同步对应源文件即可。
+
+克隆本仓库后，安装依赖并构建无需任何外部仓库源码。
 
 ## 许可证
 

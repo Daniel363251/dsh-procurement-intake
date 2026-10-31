@@ -1,0 +1,113 @@
+/*
+ * WMS v2 Design Tokens
+ * ════════════════════════════════════════════════════════════
+ * 单一真相源（Single Source of Truth）
+ * 所有颜色/圆角/字体变量在此定义，index.css 通过 @import 引入。
+ * 修改颜色只需改这里，Tailwind utility 自动同步。
+ *
+ * 颜色格式：十六进制 hex（来自 Agent Hub 设计规范）
+ * 圆角格式：rem
+ * ════════════════════════════════════════════════════════════
+ */
+
+:root {
+  /* ── 字体 ─────────────────────────────────────────────── */
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace;
+
+  /* ── 圆角基准 ─────────────────────────────────────────── */
+  /* 所有 radius-* 派生值在 index.css @theme inline 中计算 */
+  --radius: 0.5rem;      /* 8px — 输入框/按钮/Badge */
+
+  /* ════════════════════════════════════════════════════════
+     基础色阶
+     来源：Agent Hub Desktop 设计规范
+     原则：background < card < popover 形成视觉层次
+     ════════════════════════════════════════════════════════ */
+  --background:            #F1F4F8;   /* 页面底色（浅蓝灰，让白色卡片自然浮起）*/
+  --foreground:            #11192D;   /* 主文字 — 一级，标题/主内容 */
+  --card:                  #FFFFFF;   /* 卡片/面板/侧边栏 */
+  --card-foreground:       #11192D;
+  --popover:               #FFFFFF;   /* 下拉/浮层背景 */
+  --popover-foreground:    #11192D;
+
+  /* ── 文字三级色阶 ──────────────────────────────────────
+     一级 foreground  #11192D → 标题、表格主内容
+     二级 description #50607A → 表格次级内容、描述文字
+     三级 muted-foreground #7C889C → 占位符、辅助说明、时间戳
+     ─────────────────────────────────────────────────────── */
+  --description:           #50607A;
+  --muted:                 #F1F4F8;   /* 禁用/静音区域底色 */
+  --muted-foreground:      #7C889C;
+
+  /* ── 主操作色 ──────────────────────────────────────────
+     iOS 蓝 #007AFF — 所有主操作按钮、链接、激活态
+     ─────────────────────────────────────────────────────── */
+  --primary:               #007AFF;
+  --primary-foreground:    #FFFFFF;
+
+  /* ── 次要操作 ─────────────────────────────────────────── */
+  --secondary:             rgba(124, 136, 156, 0.1);
+  --secondary-foreground:  #11192D;
+
+  /* ── Hover / 聚焦高亮 ─────────────────────────────────── */
+  --accent:                rgba(124, 136, 156, 0.1);
+  --accent-foreground:     #11192D;
+
+  /* ── 危险/错误（与 status-rejected 同色）─────────────── */
+  --destructive:           #FF3B30;
+  --destructive-foreground: #FFFFFF;
+
+  /* ── 边框 ──────────────────────────────────────────────
+     半透明蓝灰，通透而不消失
+     ─────────────────────────────────────────────────────── */
+  --border:                rgba(124, 136, 156, 0.2);
+  --input:                 rgba(124, 136, 156, 0.3);   /* 输入框边框稍深 */
+  --ring:                  #007AFF;   /* 焦点环与主色一致 */
+
+  /* ── 弹窗遮罩 ──────────────────────────────────────────
+     比 black/50 更精致，来自 Agent Hub 设计规范
+     ─────────────────────────────────────────────────────── */
+  --overlay:               rgba(14, 17, 25, 0.3);
+
+  /* ── Sidebar ───────────────────────────────────────────
+     侧边栏独立 token，与内容区有轻微区分
+     ─────────────────────────────────────────────────────── */
+  --sidebar:                    #FFFFFF;
+  --sidebar-foreground:         #11192D;
+  --sidebar-primary:            #007AFF;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent:             rgba(124, 136, 156, 0.08);
+  --sidebar-accent-foreground:  #11192D;
+  --sidebar-border:             rgba(124, 136, 156, 0.15);
+  --sidebar-ring:               #007AFF;
+
+  /* ════════════════════════════════════════════════════════
+     WMS 业务语义色
+     来源：iOS 系统标准色（跨产品通用认知）
+     用途：Badge 状态、表格数字高亮、文字颜色
+     透明度规则：/15 做 Badge 背景，/30 做 Badge 边框
+     ════════════════════════════════════════════════════════ */
+
+  /* 待审核 / 等待 — iOS Amber */
+  --status-pending:        #FF9500;
+
+  /* 已通过 / 已启用 / 已生效 — iOS Green */
+  --status-approved:       #34C759;
+  --status-effective:      #34C759;
+
+  /* 已驳回 / 错误 — iOS Red（与 destructive 同色）*/
+  --status-rejected:       #FF3B30;
+
+  /* 数量增减 */
+  --qty-increase:          #34C759;
+  --qty-decrease:          #FF3B30;
+
+  /* ── Chart（数据可视化备用色阶）──────────────────────── */
+  --chart-1: #007AFF;
+  --chart-2: #34C759;
+  --chart-3: #FF9500;
+  --chart-4: #FF3B30;
+  --chart-5: #50607A;
+}

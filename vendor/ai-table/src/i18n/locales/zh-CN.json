@@ -1,0 +1,523 @@
+{
+  "aiTable": {
+    "toolbar": {
+      "filter": "筛选",
+      "group": "分组",
+      "sort": "排序",
+      "color": "填色",
+      "addField": "添加字段",
+      "savedView": "已保存视图",
+      "groupSummaryByField": "按{{field}}分组"
+    },
+    "draftBar": {
+      "filter": "筛选",
+      "group": "分组",
+      "sort": "排序",
+      "color": "填色",
+      "aiField": "AI 字段",
+      "view": "视图",
+      "viewSaved": "视图已保存",
+      "adjustedConfig": "你调整了{{label}}配置",
+      "cancel": "取消",
+      "save": "保存"
+    },
+    "filter": {
+      "title": "筛选",
+      "placeholder": "告诉 AI 你想看到什么。例如：今天发货并且存在缺货的订单",
+      "generated": "已按\"{{instruction}}\"生成筛选条件",
+      "noConditions": "没有识别到可用条件，请换一种更具体的描述",
+      "generateFailed": "生成失败，请重试",
+      "generating": "正在按\"{{instruction}}\"生成筛选条件",
+      "feedbackHelpful": "反馈有帮助",
+      "feedbackUnhelpful": "反馈无帮助",
+      "copyInstruction": "复制生成说明",
+      "conditionDescription": "在当前视图，显示符合以下条件的记录",
+      "when": "当",
+      "and": "且",
+      "or": "或",
+      "addCondition": "添加条件",
+      "addConditionGroup": "添加筛选条件组",
+      "deleteCondition": "删除筛选条件 {{index}}"
+    },
+    "group": {
+      "title": "按指定字段分组",
+      "collapseAll": "折叠所有",
+      "expandAll": "展开所有",
+      "optionOrder": "选项顺序",
+      "optionReverse": "选项逆序",
+      "addGroup": "添加分组",
+      "emptyHint": "选择一个字段，把当前页记录整理成可折叠分组",
+      "apply": "应用",
+      "deleteGroup": "删除分组 {{index}}"
+    },
+    "sort": {
+      "title": "按以下条件排序",
+      "addSort": "添加排序条件",
+      "emptyHint": "添加字段，让当前页记录按优先级依次排序",
+      "apply": "应用",
+      "dragHint": "拖动调整排序条件 {{index}} 的优先级",
+      "asc": "排序条件 {{index}} 升序",
+      "desc": "排序条件 {{index}} 降序",
+      "deleteSort": "删除排序条件 {{index}}"
+    },
+    "color": {
+      "title": "填色",
+      "placeholder": "描述哪些内容用什么颜色。例如：缺货大于 3 的单元格标红",
+      "generated": "已生成 {{count}} 条填色规则",
+      "noRules": "没有识别到可用的填色规则",
+      "generateFailed": "生成失败，请重试",
+      "generating": "正在生成填色规则…",
+      "ruleDescription": "按以下规则进行填色",
+      "smartColor": "智能配色",
+      "columnHint": "整列持续高亮，无需设置条件",
+      "addRule": "添加填色条件",
+      "apply": "应用",
+      "dragHint": "拖动调整填色条件 {{index}} 的优先级",
+      "deleteRule": "删除填色条件 {{index}}",
+      "backgroundFill": "背景色填充",
+      "selectColor": "选择填色颜色，当前为{{label}}",
+      "selectScope": "选择填色范围，当前为{{label}}",
+      "scopeMenu": "填色范围"
+    },
+    "aiField": {
+      "title": "AI 字段",
+      "close": "关闭 AI 字段",
+      "createdFields": "已创建的 AI 字段",
+      "fieldName": "字段名称",
+      "fieldNamePlaceholder": "例如：履约风险等级",
+      "outputType": "输出类型",
+      "prompt": "提示词",
+      "promptPlaceholder": "基于以下字段，评估每条记录并只返回需要的结果。",
+      "insertField": "插入字段",
+      "sourceDerived": "派生",
+      "sourceAi": "AI",
+      "sourceBusiness": "业务",
+      "generationSettings": "生成设置",
+      "autoUpdate": "自动更新",
+      "autoUpdateTooltip": "当引用字段内容变化时，AI 字段将自动重新生成",
+      "allowEmptyReferences": "允许引用字段的值为空",
+      "allowEmptyReferencesTooltip": "引用字段值为空时，不影响 AI 内容生成",
+      "preview": "前 5 行预览",
+      "repreview": "重新预览",
+      "record": "记录",
+      "previewColumn": "{{name}}（预览）",
+      "noRecords": "当前页没有可预览记录",
+      "cancel": "取消",
+      "runPreview": "运行前 5 行",
+      "save": "保存",
+      "generating": "正在生成…",
+      "generateFailed": "生成失败",
+      "skipped": "已跳过：引用字段值为空",
+      "waiting": "等待生成",
+      "rerun": "重新运行 {{name}}",
+      "delete": "删除 {{name}}",
+      "outputText": "文本",
+      "outputNumber": "数字",
+      "outputTag": "标签",
+      "promptAriaLabel": "AI 字段提示词",
+      "tokenAriaLabel": "字段：{{label}}",
+      "tooltipSuffix": "说明"
+    },
+    "modeSwitch": {
+      "switchingToSmart": "正在切换为智能表格",
+      "backToClassic": "返回传统表格",
+      "switchToSmart": "切换为智能表格",
+      "switching": "正在切换",
+      "aiTable": "AI 表格",
+      "discardTitle": "放弃未保存的配置？",
+      "discardDescription": "当前智能表格存在未保存的配置，切换后将放弃本次修改。",
+      "cancel": "取消",
+      "discardAndSwitch": "放弃并切换"
+    },
+    "freeze": {
+      "frozenColumns": "左侧冻结列",
+      "columnUnit": "列",
+      "clearFreeze": "清除冻结",
+      "hint": "点击 + 冻结左侧列，横向滚动时保持可见"
+    },
+    "loader": {
+      "title": "正在切换为 AI 智能表格",
+      "subtitle": "正在识别字段含义，并准备自然语言筛选、智能分组和视图生成能力。",
+      "statusText": "Preparing smart table",
+      "askText": "询问这个表格：找出预计到货超时且仍未完成的入库单",
+      "smartView": "智能视图",
+      "allDocuments": "全部单据",
+      "exceptionView": "异常视图",
+      "groupBySupplier": "按供应商分组",
+      "arrivalTimeout": "到货超时",
+      "quantityDiff": "数量差异",
+      "creatingGroup": "正在创建分组：供应商 / 状态 / 到货风险",
+      "generatingView": "正在生成视图：到货超时 / 数量差异 / 异常跟进",
+      "capabilityUnderstanding": "字段理解",
+      "capabilityFiltering": "自然语言筛选",
+      "capabilityGrouping": "智能分组",
+      "capabilityView": "视图生成"
+    },
+    "panelParts": {
+      "generating": "生成中…",
+      "generate": "生成",
+      "cancel": "取消",
+      "save": "保存"
+    },
+    "valueEditor": {
+      "selectPlaceholder": "请选择",
+      "rangeTo": "至",
+      "inputPlaceholder": "请输入",
+      "rangeStart": "区间起始值",
+      "rangeEnd": "区间结束值"
+    },
+    "engine": {
+      "filterSummary": "按 {{count}} 个字段筛选",
+      "groupSummary": "按 {{count}} 个字段分组",
+      "sortSummary": "按 {{count}} 个字段排序",
+      "sortSummaryByField": "按{{field}}排序",
+      "sortDefault": "排序 1",
+      "colorSummary": "填色 {{count}}",
+      "ungroupedLabel": "未填写"
+    },
+    "operators": {
+      "equals": "等于",
+      "notEquals": "不等于",
+      "contains": "包含",
+      "notContains": "不包含",
+      "isEmpty": "为空",
+      "notEmpty": "不为空",
+      "greaterThan": "大于",
+      "lessThan": "小于",
+      "greaterThanOrEqual": "大于等于",
+      "lessThanOrEqual": "小于等于",
+      "between": "区间",
+      "earlierThan": "早于",
+      "laterThan": "晚于",
+      "isToday": "今天",
+      "isPast": "已过期",
+      "isFuture": "未来",
+      "withinPastDays": "过去 N 天内",
+      "withinNextDays": "未来 N 天内"
+    },
+    "colorPalette": {
+      "coral": "珊瑚红",
+      "orange": "橙色",
+      "yellow": "黄色",
+      "lime": "青柠",
+      "green": "绿色",
+      "teal": "青色",
+      "cyan": "天蓝",
+      "blue": "蓝色",
+      "purple": "紫色",
+      "pink": "粉色",
+      "gray": "灰色"
+    },
+    "colorScope": {
+      "cell": "单元格",
+      "cellTitle": "按条件高亮关键数据",
+      "cellDesc": "自动为满足规则的单元格着色，一眼锁定异常值、达标项、优先级记录等。",
+      "row": "整行",
+      "rowTitle": "按条件高亮整行",
+      "rowDesc": "满足规则的整行自动着色，让关联字段一目了然，强化业务记录完整性。",
+      "rowMarker": "行侧",
+      "rowMarkerTitle": "行侧填色",
+      "rowMarkerDesc": "在行号左侧显示颜色标记，根据条件快速识别关键行，不遮挡任何数据。",
+      "column": "整列",
+      "columnTitle": "整列填色",
+      "columnDesc": "高亮整列以便突出显示。",
+      "previewTask": "任务",
+      "previewPriority": "优先级",
+      "previewStatus": "状态"
+    },
+    "dataView": {
+      "noFilteredRecords": "当前页没有符合智能筛选条件的记录",
+      "scopeNote": "当前页演示 · 已加载 {{filtered}} 条 / 原查询共 {{total}} 条"
+    },
+    "badge": {
+      "highRisk": "高风险",
+      "mediumRisk": "中风险",
+      "lowRisk": "低风险",
+      "attention": "需关注",
+      "normal": "正常"
+    },
+    "mock": {
+      "generateFailed": "生成失败",
+      "publishRemark": "AI 生成并发布"
+    }
+  },
+  "wms": {
+    "group": {
+      "selectRows": "选择分组 {{label}} 中的 {{count}} 条记录"
+    },
+    "rowActions": {
+      "srLabel": "操作"
+    },
+    "summary": {
+      "total": "合计",
+      "placeholder": "点击右侧设置选择汇总字段",
+      "settings": "设置",
+      "selectAll": "全部",
+      "restoreDefault": "恢复默认"
+    },
+    "timeline": {
+      "completed": "完成",
+      "details": "查看详情"
+    },
+    "columnSettings": {
+      "density": {
+        "compact": "紧凑",
+        "medium": "中等",
+        "relaxed": "宽松"
+      },
+      "pinned": "固定",
+      "groupOther": "其他",
+      "title": "列设置",
+      "rowHeight": "表格行高",
+      "unselectAll": "取消全选",
+      "selectAll": "全选",
+      "required": "必选",
+      "selected": "已选",
+      "dragHint": "拖拽调整列顺序",
+      "restoreDefault": "恢复默认",
+      "cancel": "取消",
+      "save": "保存"
+    },
+    "column": "列",
+    "freeze": {
+      "dragLabel": "拖拽调整左侧冻结列",
+      "tooltip": "拖拽可调整冻结区域"
+    },
+    "pagination": {
+      "selectedRows": "已选 {{selected}} 行，共 {{total}} 条",
+      "totalRecords": "共 {{total}} 条",
+      "rowsPerPage": "每页行数",
+      "pageInfo": "第 {{page}} / {{total}} 页"
+    },
+    "selectedCount": "已选 {{count}} 条",
+    "changeAudit": {
+      "tableAria": "配置变更审计",
+      "version": "版本",
+      "action": "动作",
+      "occurredAt": "实际时间",
+      "actor": "操作人",
+      "reason": "变更原因",
+      "summary": "变更摘要",
+      "fieldChanges": "字段变更",
+      "field": "字段",
+      "before": "变更前",
+      "after": "变更后",
+      "notSet": "未设置",
+      "removed": "已移除",
+      "noFieldDiff": "本次变更没有字段级差异。",
+      "empty": "暂无变更记录",
+      "expand": "展开",
+      "collapse": "收起",
+      "toggleAria": "{{state}} {{version}} 的字段变更",
+      "fieldChangesAria": "{{action}}字段变更"
+    },
+    "activity": {
+      "records": "执行记录",
+      "occurredAt": "实际时间",
+      "action": "动作",
+      "actor": "操作人"
+    }
+  },
+  "common": {
+    "action": {
+      "confirm": "确定",
+      "cancel": "取消",
+      "save": "保存",
+      "edit": "编辑",
+      "delete": "删除",
+      "detail": "详情",
+      "search": "查询",
+      "reset": "重置",
+      "export": "导出",
+      "import": "导入",
+      "batchConfirm": "批量确认",
+      "close": "关闭",
+      "submit": "提交",
+      "back": "返回",
+      "refresh": "刷新",
+      "more": "更多",
+      "expand": "展开",
+      "collapse": "收起",
+      "logout": "退出登录",
+      "resetDemo": "重置演示数据",
+      "confirmReset": "确认重置",
+      "switchWarehouse": "切换仓库",
+      "confirmSwitch": "确认切换",
+      "switching": "切换中…",
+      "askAi": "问问 Nexus AI",
+      "processing": "提交中…",
+      "submitting": "提交中…",
+      "create": "新建",
+      "disable": "禁用",
+      "enable": "启用",
+      "expandAll": "展开全部",
+      "collapseAll": "收起全部",
+      "done": "完成",
+      "view": "查看",
+      "viewDetail": "查看详情",
+      "saving": "保存中…",
+      "retry": "重试",
+      "backToList": "返回列表",
+      "remove": "移除",
+      "saveChanges": "保存变更"
+    },
+    "status": {
+      "enabled": "启用",
+      "disabled": "停用",
+      "success": "成功",
+      "failed": "失败",
+      "pending": "待处理",
+      "processing": "处理中",
+      "completed": "已完成",
+      "cancelled": "已取消",
+      "deleting": "删除中…",
+      "loading": "加载中…"
+    },
+    "label": {
+      "total": "共",
+      "items": "条",
+      "page": "页",
+      "pageSize": "条/页",
+      "noData": "暂无数据",
+      "loading": "加载中...",
+      "all": "全部",
+      "selectPlaceholder": "请选择",
+      "inputPlaceholder": "请输入",
+      "searchPlaceholder": "请输入关键词搜索",
+      "operation": "操作",
+      "remark": "备注",
+      "creator": "创建人",
+      "createTime": "创建时间",
+      "modifier": "修改人",
+      "modifyTime": "修改时间",
+      "noWarehouse": "未选择仓库",
+      "noWarehouseAvailable": "暂无仓库",
+      "aiFeatures": "AI 功能",
+      "labScene": "实验室场景",
+      "sceneLab": "场景工作台实验室",
+      "sceneLabDesc": "选择当前要分析和处理的业务场景",
+      "currentScene": "当前场景",
+      "switchable": "可切换",
+      "moreFilters": "更多筛选",
+      "firstPage": "首页",
+      "prevPage": "上一页",
+      "nextPage": "下一页",
+      "lastPage": "末页",
+      "status": "状态",
+      "aiAnalyzed": "AI 已分析",
+      "none": "无",
+      "optional": "选填",
+      "yes": "是",
+      "no": "否",
+      "completeTime": "完成时间",
+      "selectDateRange": "选择日期范围",
+      "unassigned": "未分配",
+      "selectedCount": "已选 {{count}} 项",
+      "operationFailed": "操作失败",
+      "submitting": "提交中…",
+      "processing": "处理中…"
+    },
+    "msg": {
+      "saveSuccess": "保存成功",
+      "deleteSuccess": "删除成功",
+      "operateSuccess": "操作成功",
+      "operateFailed": "操作失败",
+      "confirmDelete": "确定要删除选中的记录吗?",
+      "confirmBatchDelete": "确定要删除选中的 {{count}} 条记录吗?",
+      "noSelection": "请先选择记录",
+      "required": "必填项不能为空",
+      "networkError": "网络异常,请稍后重试",
+      "resetSuccess": "演示数据已重置",
+      "resetConfirmDesc": "确认重置所有演示数据到初始状态？当前的操作记录和状态变更将全部清除。",
+      "upgradeOms": "订单管理系统正在升级中，敬请期待",
+      "upgradeTms": "运输管理系统正在升级中，敬请期待",
+      "upgradeBilling": "计费管理系统正在升级中，敬请期待",
+      "switchWarehouseFailed": "切换仓库失败",
+      "confirmSwitchWarehouse": "确认切换到「{{name}}」吗？切换后页面将刷新。",
+      "createSuccess": "创建成功",
+      "createFailed": "创建失败",
+      "saveFailed": "保存失败",
+      "deleteFailed": "删除失败",
+      "enableSuccess": "启用成功",
+      "disableSuccess": "禁用成功",
+      "batchEnableSuccess": "批量启用成功",
+      "batchDisableSuccess": "批量禁用成功",
+      "irreversible": "此操作不可撤销。",
+      "loadFailed": "加载失败，请重试"
+    },
+    "app": {
+      "title": "WMS 仓储管理系统",
+      "oms": "订单管理系统",
+      "tms": "运输管理系统",
+      "billing": "计费管理系统"
+    },
+    "user": {
+      "defaultName": "管理员"
+    },
+    "conflict": {
+      "title": "数据已被他人修改",
+      "description": "该订单已被其他用户修改，请刷新后重试。"
+    },
+    "placeholder": {
+      "input": "请输入",
+      "dateRange": "选择日期范围",
+      "remarkOptional": "选填，最长200字",
+      "remarkMax": "最多 200 字",
+      "selectDate": "选择日期",
+      "selectDateRange": "选择日期范围"
+    },
+    "searching": "搜索中…",
+    "column": {
+      "action": "操作"
+    },
+    "unit": {
+      "pieces": "件"
+    },
+    "all": "全部",
+    "selectedCount": "已选 {{count}} 项",
+    "tooltip": {
+      "inDevelopment": "功能开发中"
+    },
+    "switch": {
+      "on": "已开启",
+      "off": "已关闭"
+    },
+    "tab": {
+      "active": "启用中",
+      "empty": "空库位",
+      "inactive": "已停用",
+      "occupied": "已占用"
+    },
+    "desc": {
+      "remarkOptional": "选填，最多 200 字符。"
+    },
+    "toast": {
+      "copied": "已复制到剪贴板",
+      "operationFailed": "操作失败"
+    },
+    "field": {
+      "skuCode": "SKU编码",
+      "skuName": "SKU名称",
+      "batchNo": "批次号"
+    },
+    "ai": {
+      "analyzed": "AI 已分析"
+    },
+    "dirtyGuard": {
+      "title": "确认放弃？",
+      "description": "当前表单有未保存的修改，确认放弃后内容将丢失。",
+      "continueEditing": "继续编辑",
+      "confirmDiscard": "确认放弃"
+    },
+    "aria": {
+      "clearDate": "清空日期"
+    },
+    "loading": "加载中…",
+    "formReview": {
+      "title": "请确认以下信息"
+    },
+    "password": {
+      "help": "8-20 位，必须包含大小写字母、数字、特殊字符"
+    }
+  }
+}

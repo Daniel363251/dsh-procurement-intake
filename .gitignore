@@ -7,3 +7,7 @@ node_modules/
 
 # 注意：client.js 与 vendor/ai-table/ 是构建产物，但为了「导入即用」需随仓库一起提交，
 # 因此这里不忽略它们。
+
+# ai-table 构建中间产物（npm run build:ai-table 重新生成）
+vendor/ai-table/dist/
+vendor/ai-table/*.map

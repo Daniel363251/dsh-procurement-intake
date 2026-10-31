@@ -1,0 +1,803 @@
+.smart-table-loader-card {
+  width: 100%;
+  min-height: 620px;
+  overflow: hidden;
+  border-radius: 12px;
+  padding: 1px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(91, 141, 239, 0.22),
+      rgba(34, 160, 107, 0.16),
+      rgba(255, 255, 255, 0.9)
+    );
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.05),
+    0 18px 56px rgba(15, 23, 42, 0.08);
+  color: #202123;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+.smart-table-loader-inner {
+  position: relative;
+  min-height: 618px;
+  overflow: hidden;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.9);
+  isolation: isolate;
+}
+
+/* 嵌入 WmsDataTable 卡片时由宿主提供边框、阴影和圆角，避免双层卡片边界。 */
+.smart-table-loader-card.smart-table-loader-embedded {
+  min-height: 620px;
+  border-radius: inherit;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.smart-table-loader-card.smart-table-loader-embedded .smart-table-loader-inner {
+  min-height: 620px;
+  border-radius: inherit;
+}
+
+.smart-table-bg {
+  position: absolute;
+  inset: -42%;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 24% 20%, rgba(91, 141, 239, 0.16), transparent 30%),
+    radial-gradient(circle at 76% 68%, rgba(34, 160, 107, 0.13), transparent 34%),
+    radial-gradient(circle at 48% 42%, rgba(255, 185, 132, 0.08), transparent 32%),
+    linear-gradient(135deg, #f9fafb, #eef2f7);
+  filter: blur(28px);
+  animation: smartTableBgMove 5.2s ease-in-out infinite alternate;
+}
+
+.smart-table-shimmer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(
+      110deg,
+      transparent 0%,
+      transparent 40%,
+      rgba(255, 255, 255, 0.26) 50%,
+      transparent 60%,
+      transparent 100%
+    );
+  transform: translateX(-85%);
+  animation: smartTableShimmer 3.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.smart-table-content {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  min-height: 618px;
+  padding: 20px;
+  gap: 16px;
+}
+
+/* Header */
+
+.smart-table-loader-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.smart-table-loader-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.smart-table-ai-mark {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  color: #334155;
+  font-size: 13px;
+  font-weight: 750;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+  animation: smartTableMarkPulse 2s ease-in-out infinite;
+}
+
+.smart-table-ai-mark::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 15px;
+  border: 1px solid rgba(91, 141, 239, 0.18);
+  opacity: 0;
+  animation: smartTableMarkRing 2.6s ease-out infinite;
+}
+
+.smart-table-loader-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.smart-table-loader-title {
+  color: #202123;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.smart-table-loader-subtitle {
+  color: rgba(32, 33, 35, 0.62);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.smart-table-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 620;
+  box-shadow: 0 8px 20px rgba(30, 41, 59, 0.035);
+  white-space: nowrap;
+}
+
+.smart-table-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22a06b;
+  box-shadow: 0 0 0 4px rgba(34, 160, 107, 0.12);
+  animation: smartTableStatusPulse 1.6s ease-in-out infinite;
+}
+
+/* AI table capability bar */
+
+.smart-table-toolbar {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(15, 23, 42, 0.05);
+  box-shadow: 0 10px 28px rgba(30, 41, 59, 0.04);
+}
+
+.smart-table-ask-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.smart-table-ask-input {
+  position: relative;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 0 13px;
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.84);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  overflow: hidden;
+}
+
+.smart-table-ask-prefix-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #5b8def;
+  box-shadow: 0 0 0 4px rgba(91, 141, 239, 0.12);
+}
+
+.smart-table-ask-text {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.smart-table-toolbar-btn {
+  position: relative;
+  overflow: hidden;
+  height: 34px;
+  min-width: 82px;
+  border-radius: 8px;
+  background: rgba(91, 141, 239, 0.14);
+  border: 1px solid rgba(91, 141, 239, 0.12);
+}
+
+.smart-table-toolbar-btn.secondary {
+  min-width: 72px;
+  background: rgba(15, 23, 42, 0.055);
+  border-color: rgba(15, 23, 42, 0.05);
+}
+
+.smart-table-toolbar-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.68),
+      transparent
+    );
+  transform: translateX(-100%);
+  animation: smartTableSkeletonSweep 1.8s ease-in-out infinite;
+}
+
+.smart-table-view-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.smart-table-view-label {
+  color: rgba(32, 33, 35, 0.58);
+  font-size: 12px;
+  font-weight: 650;
+  margin-right: 2px;
+}
+
+.smart-table-view-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(15, 23, 42, 0.055);
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 620;
+  animation: smartTableChipBreathe 2.6s ease-in-out infinite;
+}
+
+.smart-table-view-chip:nth-child(3) {
+  animation-delay: 0.16s;
+}
+
+.smart-table-view-chip:nth-child(4) {
+  animation-delay: 0.32s;
+}
+
+.smart-table-view-chip:nth-child(5) {
+  animation-delay: 0.48s;
+}
+
+.smart-table-view-chip:nth-child(6) {
+  animation-delay: 0.64s;
+}
+
+.smart-table-view-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #94a3b8;
+}
+
+.smart-table-view-chip.primary .smart-table-view-dot {
+  background: #5b8def;
+  box-shadow: 0 0 0 4px rgba(91, 141, 239, 0.1);
+}
+
+.smart-table-view-chip.green .smart-table-view-dot {
+  background: #22a06b;
+  box-shadow: 0 0 0 4px rgba(34, 160, 107, 0.1);
+}
+
+.smart-table-view-chip.orange .smart-table-view-dot {
+  background: #f59e0b;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
+}
+
+/* Table shell */
+
+.smart-table-shell {
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(15, 23, 42, 0.055);
+  box-shadow: 0 14px 44px rgba(30, 41, 59, 0.055);
+}
+
+.smart-table-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  background: rgba(248, 250, 252, 0.68);
+}
+
+.smart-table-topbar-left,
+.smart-table-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.smart-table-skeleton {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.smart-table-skeleton thead {
+  background: rgba(248, 250, 252, 0.76);
+}
+
+.smart-table-skeleton th {
+  height: 42px;
+  padding: 0 12px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.smart-table-skeleton td {
+  height: 44px;
+  padding: 0 12px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.045);
+  vertical-align: middle;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.smart-table-skeleton tr.smart-table-group-row td {
+  height: 34px;
+  background: rgba(248, 250, 252, 0.72);
+}
+
+.smart-table-skeleton tr.smart-table-ai-highlight td:last-child {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(91, 141, 239, 0.06),
+      rgba(34, 160, 107, 0.045)
+    );
+}
+
+.smart-table-skeleton th.smart-table-ai-column,
+.smart-table-skeleton td.smart-table-ai-column-cell {
+  position: relative;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(91, 141, 239, 0.07),
+      rgba(34, 160, 107, 0.045)
+    );
+}
+
+.smart-table-skeleton th.smart-table-ai-column::before {
+  content: "AI";
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  height: 18px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(91, 141, 239, 0.16);
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 750;
+  animation: smartTableChipBreathe 2.4s ease-in-out infinite;
+}
+
+.smart-table-group-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.smart-table-group-line {
+  flex: 1;
+  height: 1px;
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.smart-table-group-label-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #22a06b;
+  box-shadow: 0 0 0 4px rgba(34, 160, 107, 0.1);
+}
+
+/* Skeleton primitives */
+
+.smart-table-skeleton-line {
+  position: relative;
+  overflow: hidden;
+  display: block;
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(32, 33, 35, 0.1);
+}
+
+.smart-table-skeleton-line::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.72),
+      transparent
+    );
+  transform: translateX(-100%);
+  animation: smartTableSkeletonSweep 1.8s ease-in-out infinite;
+}
+
+.smart-table-skeleton-line.line-xs {
+  width: 34px;
+  height: 8px;
+}
+
+.smart-table-skeleton-line.line-sm {
+  width: 58px;
+  height: 8px;
+}
+
+.smart-table-skeleton-line.line-md {
+  width: 76px;
+}
+
+.smart-table-skeleton-line.line-lg {
+  width: 112px;
+}
+
+.smart-table-skeleton-line.line-xl {
+  width: 148px;
+}
+
+.smart-table-skeleton-line.line-full {
+  width: 92%;
+}
+
+.smart-table-skeleton-line.line-70 {
+  width: 70%;
+}
+
+.smart-table-skeleton-line.line-52 {
+  width: 52%;
+}
+
+.smart-table-mini-checkbox {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.smart-table-mini-ai-spark {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 6px;
+  background: rgba(91, 141, 239, 0.1);
+  border: 1px solid rgba(91, 141, 239, 0.12);
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 750;
+  animation: smartTableMarkPulse 2s ease-in-out infinite;
+}
+
+.smart-table-cell-flex {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Footer */
+
+.smart-table-footer-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 14px;
+  border-top: 1px solid rgba(15, 23, 42, 0.05);
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.smart-table-capability-chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.smart-table-capability-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(15, 23, 42, 0.055);
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 620;
+  animation: smartTableChipBreathe 2.8s ease-in-out infinite;
+}
+
+.smart-table-capability-chip:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.smart-table-capability-chip:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+.smart-table-capability-chip:nth-child(4) {
+  animation-delay: 0.54s;
+}
+
+.smart-table-capability-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #5b8def;
+  box-shadow: 0 0 0 4px rgba(91, 141, 239, 0.1);
+}
+
+.smart-table-capability-chip:nth-child(2) .smart-table-capability-dot {
+  background: #22a06b;
+  box-shadow: 0 0 0 4px rgba(34, 160, 107, 0.1);
+}
+
+.smart-table-capability-chip:nth-child(3) .smart-table-capability-dot {
+  background: #f59e0b;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
+}
+
+.smart-table-capability-chip:nth-child(4) .smart-table-capability-dot {
+  background: #64748b;
+  box-shadow: 0 0 0 4px rgba(100, 116, 139, 0.1);
+}
+
+.smart-table-progress-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.smart-table-progress-text {
+  color: rgba(32, 33, 35, 0.58);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.smart-table-mini-progress {
+  position: relative;
+  width: 116px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.07);
+}
+
+.smart-table-mini-progress::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -38%;
+  width: 38%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #5b8def, #22a06b);
+  opacity: 0.72;
+  animation: smartTableProgressMove 2s ease-in-out infinite;
+}
+
+.smart-table-dots::after {
+  content: "";
+  display: inline-block;
+  width: 1.2em;
+  text-align: left;
+  animation: smartTableDots 1.4s steps(4, end) infinite;
+}
+
+/* Animations */
+
+@keyframes smartTableBgMove {
+  from {
+    transform: translate(-2%, -2%) scale(1);
+  }
+
+  to {
+    transform: translate(3%, 3%) scale(1.06);
+  }
+}
+
+@keyframes smartTableShimmer {
+  0% {
+    transform: translateX(-85%);
+    opacity: 0;
+  }
+
+  28% {
+    opacity: 1;
+  }
+
+  62% {
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translateX(85%);
+    opacity: 0;
+  }
+}
+
+@keyframes smartTableSkeletonSweep {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes smartTableMarkPulse {
+  0%, 100% {
+    transform: scale(0.96);
+    opacity: 0.84;
+  }
+
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes smartTableMarkRing {
+  0% {
+    transform: scale(0.88);
+    opacity: 0.4;
+  }
+
+  100% {
+    transform: scale(1.38);
+    opacity: 0;
+  }
+}
+
+@keyframes smartTableStatusPulse {
+  0%, 100% {
+    transform: scale(0.92);
+    opacity: 0.65;
+  }
+
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes smartTableChipBreathe {
+  0%, 100% {
+    opacity: 0.74;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes smartTableProgressMove {
+  0% {
+    left: -38%;
+  }
+
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes smartTableDots {
+  0% {
+    content: "";
+  }
+
+  25% {
+    content: ".";
+  }
+
+  50% {
+    content: "..";
+  }
+
+  75%, 100% {
+    content: "...";
+  }
+}
+
+/* Responsive */
+
+@media (max-width: 900px) {
+  .smart-table-loader-card,
+  .smart-table-loader-inner,
+  .smart-table-content {
+    min-height: auto;
+  }
+
+  .smart-table-loader-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .smart-table-ask-row {
+    grid-template-columns: 1fr;
+  }
+
+  .smart-table-toolbar-btn,
+  .smart-table-toolbar-btn.secondary {
+    width: 100%;
+  }
+
+  .smart-table-shell {
+    overflow-x: auto;
+  }
+
+  .smart-table-skeleton {
+    min-width: 980px;
+  }
+
+  .smart-table-footer-status {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
